@@ -45,8 +45,10 @@ class Account:
     def load_account(directory, username):
         path = directory + '/' + username + '.act'
         try:
+            print('Successfull loading of account')
             return 200, pickle.load(open(path, 'rb'))
         except Exception as e:
+            print(e)
             return e, None
 
     @staticmethod
@@ -179,7 +181,7 @@ class Position():
             side = self.side
         if strike == None:
             strike = self.strike
-        if price == None:
+        if type(price) == None:
             price = self.price
         if symbol == None:
             symbol = self.symbol

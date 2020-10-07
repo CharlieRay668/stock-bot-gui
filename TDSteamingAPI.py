@@ -11,7 +11,7 @@ try:
     import thread
 except ImportError:
     import _thread as thread
-from TDRestAPI import Account   
+from TDRestAPI import Rest_Account   
 
 def format_header(access_token):
     return {'Authorization': "Bearer {}".format(access_token)}
@@ -21,7 +21,7 @@ def unix_time_millis(dt):
     return (dt - epoch).total_seconds() * 1000.0
 
 def get_user_principals(key_file_name):
-    account = Account(key_file_name)
+    account = Rest_Account(key_file_name)
     endpoint = "https://api.tdameritrade.com/v1/userprincipals"
 
     headers = format_header(account.update_access_token())

@@ -1,13 +1,15 @@
 import discord
 from discord.ext import commands
-from user_linsten import Listener
-from account import Account, Trade, Position
+from DiscordListener import Listener
+from TDAccount import Account, Trade, Position
 from os import path
 import os
 import datetime as dt
-import orderer
+from TDRestAPI import Rest_Account
+from TDExecutor import TDExecutor
 
-
+# intents = discord.Intents.default()
+# intents.members = True
 client = commands.Bot(command_prefix = '.', case_insensitive=True)
 
 DIRECTORY = 'listeners'
@@ -29,6 +31,8 @@ DEV_BOT_TOKEN = 'NzUzMzg1MjE1MTAzMzM2NTg4.X1laqA.vKvoV8Gz9jBWDWvIaBGDC4xbLB4'
 BOT_TOKEN = 'NzU0MDAyMzEwNTM5MTE2NTQ0.X1uZXw.urRh3pgMuS8IAfD4jAMbJVdO8D4'
 CREDS = BOT_TOKEN
 
+TD_ACCOUNT = Rest_Account('keys.json')
+
 
 def between(upper, lower, location):
     if upper == None or lower == None:
@@ -42,7 +46,6 @@ def check_float(string):
     except:
         return False
     
-
 def check_unstable(ctx):
     utopia = client.get_guild(UTOPIA)
     test_server = client.get_guild(TEST_SERVER)
@@ -244,6 +247,47 @@ async def notificationhelp(ctx):
         await ctx.channel.send(embed=embedVar)
 
 @client.command()
+async def check(ctx, *, params):
+    if params.split(' ')[0] == 'status':
+        if len(params.split(' ')) < 2:
+            await ctx.channel.send('Please enter a user to check position status')
+        else:
+            if '(' in params and ')' in params:
+                start = params.find('(')
+                end = params.find(')')
+                acct_name = params[start+1:end]
+            else:
+                acct_name = params.split(' ')[1]
+            status, account = Account.load_account('accounts', acct_name)
+            if status == 200:
+                embedVar = discord.Embed(title=acct_name+"'s current public positions", description='These may not be fully accurate due to inconsitency in closing of positions. If you dont see a open position you can take that as fact though.', color=0xb3b300)
+                for pos in account.get_positions():
+                    embedVar.add_field(name=pos.ticker, value=pos.strike + ' ' + pos.date + ' ' + pos.side, inline=False)
+                await ctx.channel.send(embed=embedVar)
+            else:
+                embedVar = discord.Embed(title="Sorry", description='Unable to find user: ' + str(acct_name), color=0xD62121)
+                await ctx.channel.send(embed=embedVar)
+    elif params.split(' ')[0] == 'listen':
+        if len(params.split(' ')) < 2:
+            author_name = ctx.author.name
+        else:
+            if '(' in params and ')' in params:
+                start = params.find('(')
+                end = params.find(')')
+                author_name = params[start+1:end]
+            else:
+                author_name = params.split(' ')[1]
+        persons = []
+        for fn in os.listdir('listeners'):
+            file_name = fn.split('.')[0]
+            if author_name in Listener.load_listener('listeners', file_name).get_listeners():
+                persons.append(file_name)
+        embedVar = discord.Embed(title="User " + author_name + ' Is following' , description= ', '.join(persons), color=0x00e6b8)
+        await ctx.channel.send(embed=embedVar)
+    else:
+        await ctx.channel.send('Unkown check command')
+
+@client.command()
 async def checklisten(ctx):
     if check_user_perms(ctx):
         persons = []
@@ -287,7 +331,7 @@ async def checkperms(ctx):
 
 @client.command()
 async def listen(ctx, *, user):
-    main_server = client.get_guild(UTOPIA)
+    main_server = ctx.guild
     found_user = False
     if check_user_perms(ctx):
         for member in main_server.members:
@@ -433,8 +477,10 @@ async def debitspread(ctx, *, order):
 @client.command(aliases=['in', "bought", "grabbed", 'grabbing', 'buying', 'bto', 'btc','swing', 'swinging'])
 async def buy(ctx, *, order):
     order = order.replace('*', '')
+    print(order)
     server_main = client.get_guild(UTOPIA)
     if check_admin_perms(ctx):
+        print('perms')
         if len(order.split(' ')) < 3:
             response, account = Account.load_account('accounts', ctx.author.name)
             if response == 200:
@@ -445,11 +491,17 @@ async def buy(ctx, *, order):
                         strike = position.get_strike()
                         date = position.get_date()
                         side = position.get_side()
-                        price = orderer.get_auth_quote(orderer.get_option_symbol(ticker, strike, '20', date.split('/')[0], date.split('/')[1], side))
+                        price = TD_ACCOUNT.get_quotes(TD_ACCOUNT.get_option_symbol(ticker, strike, '20', date.split('/')[0], date.split('/')[1], side))
                         position_2 = position.copy(closing_trade=True, time=dt.datetime.now(), ref_price=price, executed=False)
                         account.add_trade(Trade(position, position_2))
+                        account.add_position(position_2)
                         account.save_self('accounts')
-                        TDExecutor.execute(account.get_username(), 'accounts')
+                        try:
+                            TDExecutor.execute(account.get_username(), 'accounts', opening=False)
+                        except Exception as e:
+                            TDExecutor.log_transaction(str(e))
+                        account.remove_position(position_2)
+                        account.save_self('accounts')
                         await ctx.channel.send('**Success**\nClosed Position: **' + position_2.human_string() + '**')
                         for member in broadcast(ctx, server_main):
                             try:
@@ -476,17 +528,21 @@ async def buy(ctx, *, order):
                     return inner_check
                 msg = await client.wait_for('message', timeout=30.0, check=check(ctx.author))
                 date, strike, ticker, side, ref_price = parse_error_order(msg.content, date, strike, ticker, side, ref_price)
-            string = ticker + ' ' + strike + ' ' + date + ' ' + side + ' ' + str(ref_price) + ' Channel: ' + ctx.channel.name 
+            string = ticker + ' ' + strike + ' ' + date + ' ' + side + ' ' + str(ref_price) + ' Channel: ' + ctx.channel.name
             if extra_info is not None:
                 string += ' Message: ' + extra_info
 
             response, account = Account.load_account('accounts', ctx.author.name)
             if response == 200:
-                symbol = orderer.get_option_symbol(ticker, strike, '20', date.split('/')[0], date.split('/')[1], side)
-                price = orderer.get_auth_quote(symbol)
+                symbol = TD_ACCOUNT.get_option_symbol(ticker, strike, '20', date.split('/')[0], date.split('/')[1], side)
+                price = TD_ACCOUNT.get_quotes(symbol)
                 account.add_position(Position(ticker.upper(), date, side, strike, price, symbol, False, False, False, ctx.author.name, ctx.channel.name, dt.datetime.now()))
+                print(type(account))
                 account.save_self('accounts')
-                TDExecutor.execute(account.get_username(), 'accounts')
+                try:
+                    TDExecutor.execute(account.get_username(), 'accounts', opening=True)
+                except Exception as e:
+                    TDExecutor.log_transaction(str(e))
             else:
                 await ctx.author.send("You sent out an alert without first inizializing an account, the alert was sent to all your followers however alert tracking is not available without an account.")
 
@@ -514,11 +570,17 @@ async def sell(ctx, *, order):
                         strike = position.get_strike()
                         date = position.get_date()
                         side = position.get_side()
-                        price = orderer.get_auth_quote(orderer.get_option_symbol(ticker, strike, '20', date.split('/')[0], date.split('/')[1], side))
+                        price = TD_ACCOUNT.get_quotes(TD_ACCOUNT.get_option_symbol(ticker, strike, '20', date.split('/')[0], date.split('/')[1], side))
                         position_2 = position.copy(closing_trade=True, time=dt.datetime.now(), price=price, executed=False)
                         account.add_trade(Trade(position, position_2))
+                        account.add_position(position_2)
                         account.save_self('accounts')
-                        TDExecutor.execute(account.get_username(), 'accounts')
+                        try:
+                            TDExecutor.execute(account.get_username(), 'accounts', opening=False)
+                        except Exception as e:
+                            TDExecutor.log_transaction(str(e))
+                        account.remove_position(position_2)
+                        account.save_self('accounts')
                         await ctx.channel.send('**Success**\nClosed Position: **' + position_2.human_string() + '**')
                         for member in broadcast(ctx, server_main):
                             try:
@@ -551,11 +613,14 @@ async def sell(ctx, *, order):
 
             response, account = Account.load_account('accounts', ctx.author.name)
             if response == 200:
-                symbol = orderer.get_option_symbol(ticker, strike, '20', date.split('/')[0], date.split('/')[1], side)
-                price = orderer.get_auth_quote(symbol)
+                symbol = TD_ACCOUNT.get_option_symbol(ticker, strike, '20', date.split('/')[0], date.split('/')[1], side)
+                price = TD_ACCOUNT.get_quotes(symbol)
                 account.add_position(Position(ticker.upper(), date, side, strike, price, symbol, False, True, False, ctx.author.name, ctx.channel.name, dt.datetime.now()))
                 account.save_self('accounts')
-                TDExecutor.execute(account.get_username(), 'accounts')
+                try:
+                    TDExecutor.execute(account.get_username(), 'accounts', opening=True)
+                except Exception as e:
+                    TDExecutor.log_transaction(str(e))
             else:
                 await ctx.author.send("You sent out an alert without first inizializing an account, the alert was sent to all your followers however alert tracking is not available without an account.")
             for member in broadcast(ctx, server_main):
