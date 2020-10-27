@@ -8,12 +8,9 @@ class TDExecutor():
     @staticmethod
     def choose_best(td_account, position):
         surroundings = TDExecutor.get_surrounding(td_account, position)
-        print(surroundings)
         min_symbol, min_spread = TDExecutor.find_min_spread(surroundings)
         new_position = position.copy(strike=TDExecutor.get_strike_from_symbol(min_symbol), symbol=min_symbol)
-        print(new_position, 'NEW POSITION', position, new_position.symbol, position.symbol.upper())
         new_surroundings = TDExecutor.get_surrounding(td_account, new_position, above_below=1)
-        print(new_surroundings, 'NEW SURROUNDINGS')
         if not (new_surroundings[0]['ask'] < new_surroundings[1]['ask'] and new_surroundings[2]['ask'] < new_surroundings[1]['ask']):
             return new_position, min_symbol, min_spread
         elif not (surroundings[0]['ask'] < surroundings[1]['ask'] and surroundings[2]['ask'] < surroundings[1]['ask']):
@@ -54,15 +51,12 @@ class TDExecutor():
         date = position.date
         side = position.side
         date_string = '2020-'+date.split('/')[0]+'-'+date.split('/')[1]
-        #print(position)
         symbol = TDExecutor.get_symbol_from_position(td_account, position)
-        #print(symbol)
         delta = datetime.timedelta(weeks=2)
         date_time = datetime.datetime.strptime(date_string, '%Y-%m-%d')
         from_date = datetime.datetime.strftime(date_time-delta, '%Y-%m-%d')
         to_date = datetime.datetime.strftime(date_time+delta, '%Y-%m-%d')
         chain = td_account.get_options_chain(position.ticker.upper(), strike_count=strike_count, from_date=from_date, to_date=to_date, contract_type=side.replace('S', ''))
-        print(chain)
         for epoch_time in chain['expirationDate']:
             time = int(epoch_time)
             time = datetime.datetime.fromtimestamp(time/1000).strftime('%m/%d/%Y')
@@ -70,14 +64,13 @@ class TDExecutor():
                 expiration_time = epoch_time
                 break
         symbols = [index for (index, item) in chain['expirationDate'].iteritems() if item == expiration_time]
-        print(symbols)
         for index, item in enumerate(symbols):
-            print(item, symbol)
             if item == symbol:
-                print(item, symbol)
-                if index-(above_below+1) < 0 or index+(above_below+1) > len(symbols):
+                if (index-(above_below+1) < 0 or index+(above_below+1) > len(symbols)) or type(symbols) == None:
                     return TDExecutor.get_surrounding(td_account, position, strike_count+10, above_below=above_below)
-                return [chain.loc[symbols[special_index]] for special_index in range(index-above_below, index+(above_below+1))]
+                else:
+                    return [chain.loc[symbols[special_index]] for special_index in range(index-above_below, index+(above_below+1))]
+        return TDExecutor.get_surrounding(td_account, position, strike_count+10, above_below=above_below)
 
     @staticmethod
     def order_proper(position, td_account, dollar_cost):
@@ -112,9 +105,12 @@ class TDExecutor():
     def close_position(position, td_account):
         print(position)
         symbol = position.symbol
+        print(symbol)
         positions = td_account.get_positions()
+        print(positions.keys())
         if symbol in positions.keys():
-            return (200, 'Success closed position', td_account.sell_to_close(symbol, positions[symbol]))
+            print(symbol, positions[symbol])
+            return (200, 'Success closed position', str(symbol),  td_account.sell_to_close(symbol, positions[symbol]))
         else:
             return (404, 'Unable to find position in holdings', None)
 
@@ -136,6 +132,7 @@ class TDExecutor():
                             response = None
                             if opening:
                                 response = TDExecutor.order_proper(pos, rest_account, 1000)
+                                pos.symbol = response[1]
                             else:
                                 response = TDExecutor.close_position(pos, rest_account)
                             print(response)

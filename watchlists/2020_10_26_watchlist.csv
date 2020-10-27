@@ -1,0 +1,14 @@
+Unnamed: 0,SYMBOL,DIRECTION,THRESHOLD,PT,AUTHOR,UPLOADED,ALERTED
+0,nflx,above,490.61,494.94,Charlie678,True,True
+1,okta,above,220.96,223.5,Charlie678,True,True
+2,baba,above,310.0,314.0,Charlie678,True,True
+3,bidu,above,134.73,136.27,Charlie678,True,False
+4,wday,above,225.6,228.2,Charlie678,True,False
+5,msft,above,216.46,217.64,Charlie678,True,False
+6,dal,above,34.07,34.76,Charlie678,True,False
+7,roku,above,228.0,230.0,Charlie678,True,True
+8,zm,above,520.0,524.0,Charlie678,True,True
+9,baba,above,315.0,320.0,Charlie678,True,False
+10,qcom,above,130.0,132.0,Charlie678,True,False
+11,nke,above,131.5,133.0,Charlie678,True,False
+12,twtr,above,50.5,51.0,Charlie678,True,True

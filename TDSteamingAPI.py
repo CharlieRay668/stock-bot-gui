@@ -105,11 +105,11 @@ class ClientWebsocket():
 
     def check_close(self):
         if self.exit_condition():
-            ws.close()
+            self.ws.close()
             print("thread terminating...")
 
     def on_message(self, ws, message):
-        print(message)
+        #print(message)
         message_decoded = json.loads(message)
         if 'data' in message_decoded.keys():
             data = message_decoded['data'][0]
@@ -141,21 +141,17 @@ class ClientWebsocket():
 if __name__ == "__main__":
 
     user_principals = get_user_principals('keys.json')
-    # mainstring =''
-    # for line in open('companies.txt', 'r').readlines():
-    #     mainstring += line.replace('\n', '') + ','
     requests = []
-    requests.append(Request('CHART_FUTURES', 'SUBS', user_principals, {"keys": "/ES","fields": "0,1,2,3,4,5,6,7"}))
+    #requests.append(Request('CHART_FUTURES', 'SUBS', user_principals, {"keys": "/ES","fields": "0,1,2,3,4,5,6,7"}))
     
     #requests.append(Request('OPTION', 'SUBS', user_principals, {"keys": 'AMZN_100220C3280',"fields": "0,1,2,3,4,5,6,7,8,32"}))
     #requests.append(Request('NEWS_HEADLINE', 'SUBS', user_principals, {'keys': 'GOOG,AMZN,TSLA,AAPL,MSFT,DDOG,SPY,WMT,CAT,MNRA,', 'fields':'0,1,2,3,4'}))
-
-
+    requests.append(Request('QUOTE', 'SUBS', user_principals, {"keys": 'AMZN,TSLA,SPY,AMD',"fields": "0,1,2,3,4,5,6,7,8,48"}))
     login_encoded = get_login_request(user_principals)
     data_encoded, request_id = get_data_request(requests)
 
     def exit_con():
-        return datetime.now().minute >= 40
+        return datetime.now().minute >= 57
     def data_handler(data):
         # x = 0
         # for item in data['content']:
@@ -169,16 +165,23 @@ if __name__ == "__main__":
     client = ClientWebsocket(login_encoded, data_encoded, exit_con, user_principals, True, data_handler)
 
     ws = client.get_websocket()
+    print(type(ws))
     thread.start_new_thread(ws.run_forever, ())
     # wst = threading.Thread(target=ws.run_forever())
     # wst.daemon = True
     # wst.start()
     x = 0
     while True:
-        if x == 3:
-            amnz_quote, request_id = get_data_request([Request('QUOTE', 'SUBS', user_principals, {"keys": 'AMZN',"fields": "0,1,2,3,4,5,6,7,8,48"})], request_id)
-            print(amnz_quote)
-            print(client.send_message(amnz_quote), 'Result')
+        # if x == 3:
+        #     requests.append(Request('QUOTE', 'SUBS', user_principals, {"keys": 'AMZN',"fields": "0,1,2,3,4,5,6,7,8,48"}))
+        #     amnz_quote, request_id = get_data_request(requests, request_id)
+        #     print(amnz_quote)
+        #     print(client.send_message(amnz_quote), 'Result')
+        # if x == 5:
+        #     requests.append(Request('QUOTE', 'SUBS', user_principals, {"keys": 'TSLA',"fields": "0,1,2,3,4,5,6,7,8,48"}))
+        #     amnz_quote, request_id = get_data_request(requests, request_id)
+        #     print(amnz_quote)
+        #     print(client.send_message(amnz_quote), 'Result')
         print('Whats up', x)
         time.sleep(5)
         x += 1

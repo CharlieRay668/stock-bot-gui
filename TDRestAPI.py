@@ -164,6 +164,7 @@ class Rest_Account:
             self.update_access_token()
             headers = {'Authorization': "Bearer {}".format(self.access_token)}
             response = self.session.post(url=endpoint, json=payload, headers=headers, timeout=20)
+        return response
 
 
     def buy(self, ticker, amount):
@@ -191,7 +192,8 @@ class Rest_Account:
             ticker (string): Ticker to sell
             amount (int): Number of shares/contracts to sell
         """
-        self.place_order(ticker, amount, 'SELL_TO_CLOSE')
+        price = self.get_quotes(ticker)['bidPrice'].values[0]
+        return self.place_order_limit(ticker, amount, price, 'SELL')
 
     def place_order_limit(self, symbol, amt, price, side):
         """ Places limit  BTO order with 'DAY' duration and 'NORMAL' session.
@@ -208,7 +210,7 @@ class Rest_Account:
         endpoint = r"https://api.tdameritrade.com/v1/accounts/{}/orders".format(
             self.account_id)
 
-        print(header, endpoint)
+        
         if side == 'BUY':
             payload = {
                 "complexOrderStrategyType": "NONE",
@@ -235,6 +237,7 @@ class Rest_Account:
             self.update_access_token()
             headers = {'Authorization': "Bearer {}".format(self.access_token)}
             response = self.session.post(url=endpoint, json=payload, headers=headers, timeout=20)
+        return response
 
     def history(self, ticker, frequency, days, days_ago=0, frequency_type="minute", need_extended_hours_data=False):
         """ Compiles a DataFrame containing candles for the given ticker

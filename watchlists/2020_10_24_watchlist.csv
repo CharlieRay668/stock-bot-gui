@@ -1,0 +1,10 @@
+Unnamed: 0,SYMBOL,DIRECTION,THRESHOLD,PT,AUTHOR,UPLOADED
+0,tsla,above,450.0,500.0,Charlie678,True
+1,amd,above,90.0,95.0,Charlie678,True
+2,wmt,above,200.0,250.0,Charlie678,True
+3,nio,below,50.0,40.0,Charlie678,True
+4,cat,above,100.0,110.0,Charlie678,True
+5,tsla,below,440.0,400.0,Charlie678,True
+6,nflx,above,550.0,560.0,Charlie678,True
+7,goog,above,690.0,700.0,Charlie678,True
+8,amzn,above,4000.0,4500.0,Charlie678,True

@@ -7,10 +7,12 @@ import os
 import datetime as dt
 from TDRestAPI import Rest_Account
 from TDExecutor import TDExecutor
+from multiprocessing import Pool
 
-# intents = discord.Intents.default()
-# intents.members = True
-client = commands.Bot(command_prefix = '.', case_insensitive=True)
+
+intents = discord.Intents.default()
+intents.members = True
+client = commands.Bot(command_prefix = '.', case_insensitive=True,  intents=intents)
 
 DIRECTORY = 'listeners'
 
@@ -219,7 +221,7 @@ async def on_message_edit(before, ctx):
 async def adjustment(ctx, *, adjustment):
     main_server = client.get_guild(UTOPIA)
     if check_admin_perms(ctx):
-        for member in broadcast(ctx, server_main):
+        for member in broadcast(ctx, main_server):
             try:
                 await member.send('Adjustment alert From **' + ctx.author.name + '**: ' + adjustment)
             except:
@@ -471,7 +473,7 @@ async def debitspread(ctx, *, order):
                 await member.send(ctx.author.name + ' Is '+ open_close +'ing a debit spread for  ' + base_string + legs)
             except:
                 print('Faile on ' + member.name)
-        await ctx.channel.send('** Success**\n' + open_close[0].upper() + open_close[1:] + ' debit spread' + base_string + legs)
+        await ctx.channel.send('@here ** Success**\n' + open_close[0].upper() + open_close[1:] + ' debit spread' + base_string + legs)
 
 
 @client.command(aliases=['in', "bought", "grabbed", 'grabbing', 'buying', 'bto', 'btc','swing', 'swinging'])
@@ -535,7 +537,7 @@ async def buy(ctx, *, order):
             response, account = Account.load_account('accounts', ctx.author.name)
             if response == 200:
                 symbol = TD_ACCOUNT.get_option_symbol(ticker, strike, '20', date.split('/')[0], date.split('/')[1], side)
-                price = TD_ACCOUNT.get_quotes(symbol)
+                price = TD_ACCOUNT.get_quotes(symbol)['mark']
                 account.add_position(Position(ticker.upper(), date, side, strike, price, symbol, False, False, False, ctx.author.name, ctx.channel.name, dt.datetime.now()))
                 print(type(account))
                 account.save_self('accounts')
@@ -545,13 +547,33 @@ async def buy(ctx, *, order):
                     TDExecutor.log_transaction(str(e))
             else:
                 await ctx.author.send("You sent out an alert without first inizializing an account, the alert was sent to all your followers however alert tracking is not available without an account.")
-
+            
+            await ctx.channel.send('**Success**\nBuying: Ticker **' + ticker +'** Strike **' + strike + '** Date **' + date + '** Side **' + side + '** Avg Price **' + str(ref_price) + '**')
             for member in broadcast(ctx, server_main):
                 try:
                     await member.send(ctx.author.name + ' Is now BUYING ' + string)
                 except:
                     print('Faile on ' + member.name)
-            await ctx.channel.send('**Success**\nBuying: Ticker **' + ticker +'** Strike **' + strike + '** Date **' + date + '** Side **' + side + '** Avg Price **' + str(ref_price) + '**')
+
+def callback():
+    print('calledback')
+
+async def sendDM(member, message):
+    await member.send(message)
+
+@client.command()
+async def speedtest(ctx):
+    member = ctx.author
+    start = dt.datetime.now()
+    pool = Pool(processes=4)              # Start a worker processes.
+    result = pool.apply_async(sendDM, args = (member, 'speedtest'), callback = callback)
+    #await member.send("Speed Test " + str(x))
+    end = dt.datetime.now()-start
+    await ctx.channel.send('Time Elapsed to send 50 DMs ' + str(end))
+
+
+
+
 
 @client.command(aliases=['cut', "sold", "cutting", 'selling', 'stc', 'closing', 'sto'])
 async def sell(ctx, *, order):
@@ -614,7 +636,7 @@ async def sell(ctx, *, order):
             response, account = Account.load_account('accounts', ctx.author.name)
             if response == 200:
                 symbol = TD_ACCOUNT.get_option_symbol(ticker, strike, '20', date.split('/')[0], date.split('/')[1], side)
-                price = TD_ACCOUNT.get_quotes(symbol)
+                price = TD_ACCOUNT.get_quotes(symbol)['mark']
                 account.add_position(Position(ticker.upper(), date, side, strike, price, symbol, False, True, False, ctx.author.name, ctx.channel.name, dt.datetime.now()))
                 account.save_self('accounts')
                 try:
@@ -623,11 +645,13 @@ async def sell(ctx, *, order):
                     TDExecutor.log_transaction(str(e))
             else:
                 await ctx.author.send("You sent out an alert without first inizializing an account, the alert was sent to all your followers however alert tracking is not available without an account.")
+            
+            await ctx.channel.send('**Success**\nSelling: Ticker **' + ticker +'** Strike **' + strike + '** Date **' + date + '** Side **' + side + '** Avg Price **' + str(ref_price))
             for member in broadcast(ctx, server_main):
                 try:
                     await member.send(ctx.author.name + ' Is now SELLING ' + string)
                 except:
                     print('Faile on ' + member.name)
-            await ctx.channel.send('**Success**\nSelling: Ticker **' + ticker +'** Strike **' + strike + '** Date **' + date + '** Side **' + side + '** Avg Price **' + str(ref_price))
+            
 
 client.run(CREDS)

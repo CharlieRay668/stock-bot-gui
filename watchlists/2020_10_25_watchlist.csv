@@ -1,0 +1,6 @@
+Unnamed: 0,SYMBOL,DIRECTION,THRESHOLD,PT,AUTHOR,UPLOADED,ALERTED
+0,gld,below,900.0,880.0,Charlie678,True,True
+1,tsla,below,900.0,880.0,Charlie678,True,False
+2,gld,below,880.0,700.0,Charlie678,True,True
+3,gld,below,870.0,700.0,Charlie678,True,True
+4,gld,below,860.0,700.0,Charlie678,True,True
