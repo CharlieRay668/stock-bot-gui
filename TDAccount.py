@@ -28,6 +28,10 @@ class Account:
         self.positions.remove(position)
     def remove_trade(self, trade):
         self.trades.remove(trade)   
+    def get_position(self, ticker):
+        for position in self.positions:
+            if position.ticker == ticker:
+                return position
 
 
     def save_self(self, directory):

@@ -132,9 +132,11 @@ class TDExecutor():
                             response = None
                             if opening:
                                 response = TDExecutor.order_proper(pos, rest_account, 1000)
+                                #response = 'Turned off for elections'
                                 pos.symbol = response[1]
                             else:
                                 response = TDExecutor.close_position(pos, rest_account)
+                                #response = 'Turned off for elections'
                             print(response)
                             TDExecutor.log_transaction(response)
             account.save_self('accounts')

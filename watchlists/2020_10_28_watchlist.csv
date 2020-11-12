@@ -1,0 +1,9 @@
+Unnamed: 0,SYMBOL,DIRECTION,THRESHOLD,PT,AUTHOR,UPLOADED,ALERTED
+0,zm,above,540.5,552.17,Charlie678,True,True
+1,roku,above,226.37,229.35,Charlie678,True,False
+2,nflx,above,490.6,494.94,Charlie678,True,True
+3,fb,above,284.15,289.18,Charlie678,True,False
+4,bidu,above,134.73,136.27,Charlie678,True,False
+5,pins,above,52.95,53.74,Charlie678,True,True
+6,nke,below,127.75,126.59,Charlie678,True,True
+7,mcd,below,222.0,219.43,Charlie678,True,True

@@ -47,3 +47,26 @@ The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any
 (200, 'Success closed position', 'TSLA_103020C425', <Response [201]>)
 (<TDAccount.Position object at 0x000001FF99710B50>, 'BIDU_103020C138', 10, 'BIDU', 1000, ' Sucess, Option ordered', <Response [201]>)
 (200, 'Success closed position', 'BIDU_103020C138', <Response [201]>)
+(<TDAccount.Position object at 0x0000025423C47550>, 'NFLX_103020C490', 1, 'NFLX', 1000, ' Sucess, Option ordered', <Response [201]>)
+(200, 'Success closed position', 'NFLX_103020C490', <Response [201]>)
+'NoneType' object is not subscriptable
+free variable 'expiration_time' referenced before assignment in enclosing scope
+(404, 'Unable to find position in holdings', None)
+(404, 'Unable to find position in holdings', None)
+(<TDAccount.Position object at 0x000001BEDE7C6370>, 'TGT_110620C155', 3, 'TGT', 1000, ' Sucess, Option ordered', <Response [201]>)
+'NoneType' object is not subscriptable
+(404, 'Unable to find position in holdings', None)
+(404, 'Unable to find position in holdings', None)
+Turned off for elections
+Turned off for elections
+(404, 'Unable to find position in holdings', None)
+(<TDAccount.Position object at 0x000001F94F4A6850>, 'SNOW_110620C285', 3, 'SNOW', 1000, ' Sucess, Option ordered', <Response [201]>)
+(200, 'Success closed position', 'SNOW_110620C285', <Response [201]>)
+(<TDAccount.Position object at 0x000001AE8BFD7B80>, 'AMZN_111320P3020', 1, 'AMZN', 1000, ' Sucess, Option ordered', <Response [201]>)
+(200, 'Success closed position', 'AMZN_111320P3020', <Response [201]>)
+(<TDAccount.Position object at 0x000001D2B55B1310>, 'NFLX_111320C475', 1, 'NFLX', 1000, ' Sucess, Option ordered', <Response [201]>)
+(404, 'Unable to find position in holdings', None)
+(<TDAccount.Position object at 0x000001D2B559D880>, 'NFLX_111320C477.5', 1, 'NFLX', 1000, ' Sucess, Option ordered', <Response [201]>)
+(404, 'Unable to find position in holdings', None)
+(<TDAccount.Position object at 0x000001D2B52A8850>, 'PYPL_111320C190', 5, 'PYPL', 1000, ' Sucess, Option ordered', <Response [201]>)
+(200, 'Success closed position', 'PYPL_111320C190', <Response [201]>)

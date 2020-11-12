@@ -5,9 +5,12 @@ from TDAccount import Account, Trade, Position
 from os import path
 import os
 import datetime as dt
+import pandas as pd
 from TDRestAPI import Rest_Account
 from TDExecutor import TDExecutor
 from multiprocessing import Pool
+import chain_proccessor as cp
+from PIL import Image
 
 
 intents = discord.Intents.default()
@@ -301,6 +304,19 @@ async def checklisten(ctx):
         await ctx.channel.send(embed=embedVar)
 
 @client.command()
+async def silentclose(ctx, *, order):
+    order = order.replace('*', '').upper()
+    ticker = order.split(' ')[0]
+    print(order)
+    server_main = client.get_guild(UTOPIA)
+    if check_admin_perms(ctx):
+        response, account = Account.load_account('accounts', ctx.author.name)
+        if response == 200:
+            positon = account.get_position(ticker)
+            account.remove_position(positon)
+            await ctx.channel.send('Silently Removed Position ' + str(positon))
+
+@client.command()
 async def unlisten(ctx, * user):
     main_server = client.get_guild(UTOPIA)
     found_user = False
@@ -571,11 +587,7 @@ async def speedtest(ctx):
     end = dt.datetime.now()-start
     await ctx.channel.send('Time Elapsed to send 50 DMs ' + str(end))
 
-
-
-
-
-@client.command(aliases=['cut', "sold", "cutting", 'selling', 'stc', 'closing', 'sto'])
+@client.command(aliases=['cut', "sold", "cutting", 'selling', 'stc', 'closing', 'sto', 'close'])
 async def sell(ctx, *, order):
     order = order.replace('*', '')
     server_main = client.get_guild(UTOPIA)
@@ -652,6 +664,231 @@ async def sell(ctx, *, order):
                     await member.send(ctx.author.name + ' Is now SELLING ' + string)
                 except:
                     print('Faile on ' + member.name)
-            
+    
+
+async def handle_reactions(ctx):
+    async def send_chain(data):
+        img_io = cp.serve_pil_image(cp.create_pil_img(data))
+        with open('temp.png' ,'wb') as out: ## Open temporary file as bytes
+            out.write(img_io.read())                ## Read bytes into file
+        message = await ctx.channel.send(file=discord.File('temp.png'))
+        os.remove('temp.png')
+        emojis = ['🔺', '🔻', '🇨', '🇵', '💲', '✅', '🔄']
+        for emoji in emojis:
+            await message.add_reaction(emoji)
+        return message
+    message = await send_chain(cp.defaultdata())
+    def check(reaction, user):
+        return user == ctx.author
+    reaction_emoji = None
+    edits = []
+    current_pos = None
+    while not reaction_emoji == '✅':
+        reaction, user = await client.wait_for('reaction_add', timeout=60.0, check=check)
+        if reaction.emoji == '🇵':
+            edits.append('BP27')
+            current_pos = 'BP27'
+        elif reaction.emoji == '🔺' and (not current_pos == None):
+            loc = int(current_pos.replace('C', '').replace('P', '').replace('B', '').replace('S', '')) - 2
+            current_pos = ''.join([i for i in current_pos if not i.isdigit()])
+            current_pos = current_pos + str(loc)
+            edits[-1] = current_pos
+        elif reaction.emoji == '🔻' and (not current_pos == None):
+            loc = int(current_pos.replace('C', '').replace('P', '').replace('B', '').replace('S', '')) + 2
+            current_pos = ''.join([i for i in current_pos if not i.isdigit()])
+            current_pos = current_pos + str(loc)
+            edits[-1] = current_pos
+        elif reaction.emoji =='🇨':
+            edits.append('BC28')
+            current_pos = 'BC28'
+        elif reaction.emoji == '💲' and (not current_pos == None):
+            if 'B' in current_pos:
+                current_pos = current_pos.replace('B', 'S')
+            else:
+                current_pos = current_pos.replace('S', 'B')
+            edits[-1] = current_pos
+        elif reaction.emoji == '🔄':
+            edits = []
+            current_pos = None
+        elif reaction.emoji == '✅':
+            return edits
+        reaction_emoji = reaction.emoji
+        await message.delete()
+        message = await send_chain(cp.get_edit_data(edits))
+    return edits
+
+@client.command()
+async def commandcreate(ctx):
+    def check(author):
+        def inner_check(message): 
+            if message.author != author:
+                return False
+            else:
+                return True
+        return inner_check
+    new_entry = []
+    TRADE_COLUMNS = dict.fromkeys(['NAME', 'STRIKE_NUM', 'STRIKE_SEP', 'DIRECTIONAL', 'ORDER_STRUCT', 'DATE_SEP', 'AVERAGE_PRICE', 'AVERAGE_PRICE_SEP'])
+    await ctx.channel.send('You are now creating a new command.\nWhat do you want this command to be called, this will be what you type after the .open ex .open creditspread')
+    msg = await client.wait_for('message', timeout=30.0, check=check(ctx.author))
+    msg = msg.content
+    TRADE_COLUMNS['NAME'] = msg
+    await ctx.channel.send('Great, you will now type .open '+msg+' to call your command.\nDoes this strategy contain more than one strike?')
+    msg = await client.wait_for('message', timeout=30.0, check=check(ctx.author))
+    msg = msg.content
+    msg = msg.lower()
+    if msg == 'yes' or msg == 'y' or msg == 'true':
+        strings = ['Press the 🇨 to add a call (left side)',
+                    'Press the 🇵 to add a call (right side)',
+                    'Press the 🔺 to move up a strike',
+                    'Press the 🔻 to move down a strike',
+                    'Press the 💲 to switch buy/sell, green->buy red->sell',
+                    'Press the 🔄 to reset the chain',
+                    'Press the ✅ to submit the chain']
+        await ctx.channel.send('\nHere is a option chain, please adjust option positions to match your strategy.\n' + '\n'.join(strings))
+        order_struct = await handle_reactions(ctx)
+        print(order_struct)
+        TRADE_COLUMNS['ORDER_STRUCT'] = [order_struct]
+        strike_num = len(order_struct)
+        TRADE_COLUMNS['STRIKE_NUM'] = strike_num
+        calls = False
+        puts = False
+        for item in order_struct:
+            if 'C' in item:
+                calls = True
+            elif 'P' in item:
+                puts = True
+        if calls and puts:
+            TRADE_COLUMNS['DIRECTIONAL'] = False
+            await ctx.channel.send('Great, looks like a non-directional ' + str(strike_num) + ' strike strategy.\n You will need to specify which strikes are calls and which are puts./nThis will look like 45C-50C-35P-40P')
+        else:
+            await ctx.channel.send('Great, looks like a directional ' + str(strike_num) + ' strike strategy. You will need to specify calls/puts')
+            TRADE_COLUMNS['DIRECTIONAL'] = True
+        await ctx.channel.send('What will mark your strikes (ex - or , -> 40-45 or 45,45)?')
+        msg = await client.wait_for('message', timeout=30.0, check=check(ctx.author))
+        msg = msg.content
+        TRADE_COLUMNS['STRIKE_SEP'] = msg
+        msg = 'Got it, you will format your strikes like 40' +msg+ '45.'
+        await ctx.channel.send(msg)
+    else:
+        TRADE_COLUMNS['ORDER_STRUCT'] = None
+        TRADE_COLUMNS['DIRECTIONAL'] = True
+        TRADE_COLUMNS['STRIKE_SEP'] = None
+        TRADE_COLUMNS['STRIKE_NUM'] = 1
+        await ctx.channel.send('Got it, directional single strike strategy, you will need to specify calls/puts')
+    await ctx.channel.send('\nWhat will mark your date (ex / -> 10/29). Default is /, type None to leave as /')
+    msg = await client.wait_for('message', timeout=30.0, check=check(ctx.author))
+    msg = msg.content
+    if msg.lower() == 'none':
+        msg = '/'
+    TRADE_COLUMNS['DATE_SEP'] = msg
+    await ctx.channel.send('Got it, you will format your dates like 10' +msg+ '29.\nDo you want to specify an average price? If no the bot will automatically gather price information')
+    msg = await client.wait_for('message', timeout=30.0, check=check(ctx.author))
+    msg = msg.content
+    msg = msg.lower()
+    if msg == 'yes' or msg == 'y' or msg == 'true':
+        TRADE_COLUMNS['AVERAGE_PRICE'] = True
+        await ctx.channel.send('What will mark your average price? (ex @ -> @3.40)')
+        msg = await client.wait_for('message', timeout=30.0, check=check(ctx.author))
+        msg = msg.content
+        TRADE_COLUMNS['AVERAGE_PRICE_SEP'] = msg
+    else:
+        TRADE_COLUMNS['AVERAGE_PRICE'] = False
+        TRADE_COLUMNS['AVERAGE_PRICE_SEP'] = False
+    csv_path = 'command_db.csv'
+    data = pd.read_csv(csv_path, index_col=0)
+    new_df = pd.DataFrame(data=TRADE_COLUMNS)
+    data = data.append(new_df, ignore_index = True)
+    data.to_csv(csv_path)
+    strike_str = '45'
+    if new_df['STRIKE_NUM'].values[0] > 1:
+        if new_df['DIRECTIONAL'].values[0]:
+            strike_str = new_df['STRIKE_SEP'].values[0].join([str(item) for item in list(range(40, 40+(5*new_df['STRIKE_NUM'].values[0]), 5))])
+        else:
+            call_num =new_df['STRIKE_NUM'].values[0]//2
+            put_num = new_df['STRIKE_NUM'].values[0]-call_num
+            call_sep = 'C' + new_df['STRIKE_SEP'].values[0]
+            put_sep =  'P' + new_df['STRIKE_SEP'].values[0]
+            strike_str = call_sep.join([str(item) for item in list(range(40, 40+(5*call_num), 5))])
+            strike_str += put_sep.join([str(item) for item in list(range(40, 40+(5*put_num), 5))])
+    directional_str = ''
+    if new_df['DIRECTIONAL'].values[0]:
+        directional_str = 'calls'
+    avg_price_str = ''
+    if new_df['AVERAGE_PRICE'].values[0]:
+        avg_price_str = new_df['AVERAGE_PRICE_SEP']+'3.40'
+    return_str = '.open '+ new_df['NAME'] + ' AMD ' + directional_str + ' ' + strike_str + ' 10' + new_df['DATE_SEP'] + '29 ' + avg_price_str
+    await ctx.channel.send("Great, looks like you're all done, here is an example of what your command will look like\n"+str(return_str.values[0]))
+    alert_str = ''
+    buys = ''
+    calls = [item for item in new_df['ORDER_STRUCT'].values[0] if 'C' in item]
+    puts = [item for item in new_df['ORDER_STRUCT'].values[0] if 'P' in item]
+    def parse_strikes(strike_str, order_struct, strike_split):
+        strikes = strike_str.split(strike_split)
+        calls = [(item[:-1], item[-1]) for item in strikes if 'C' in item]
+        puts = [(item[:-1], item[-1]) for item in strikes if 'P' in item]
+        call_struct = [(item[2:], item[0]) for item in order_struct if 'C' in item]
+        put_struct = [(item[2:], item[0]) for item in order_struct if 'P' in item]
+        call_struct.sort()
+        put_struct.sort()
+        calls.sort()
+        puts.sort()
+        call_struct = list(zip(calls, call_struct))
+        put_struct = list(zip(puts, put_struct))
+        buy_str = ''
+        sell_str = ''
+        for option, instruction in call_struct:
+            if instruction[1] == 'B':
+                buy_str += option[0] + ' Call strike'
+            else:
+                sell_str += option[0] + ' Call strike'
+        for option, instruction in put_struct:
+            if instruction[1] == 'B':
+                buy_str += option[0] + ' Put strike'
+            else:
+                sell_str += option[0] + ' Put strike'
+        return buy_str, sell_str
+    buy_str, sell_str = parse_strikes()
+    await ctx.channel.send("Here is an example of what an alert will look like\n"+str(return_str.values[0]))
+
+@client.command()
+async def link(ctx, *, company):
+    print('recievid linl')
+    company = company.split(' ')
+    ticker = company[0]
+    name = company[1]
+    data = pd.read_csv('company_names.csv', index_col=0)
+    new_df = pd.DataFrame(data=[[ticker, name]], columns=['TICKER', 'NAME'])
+    data = data.append(new_df, ignore_index = True)
+    data.to_csv('company_names.csv')
+    embedVar = discord.Embed(title="Got it, linked", description='', color=0xb3b300)
+    embedVar.add_field(name='Stock Symbol', value=ticker, inline=False)
+    embedVar.add_field(name='Company Name', value=name, inline=False)
+    await ctx.channel.send(embed=embedVar)
+
+@client.command()
+async def createchannel(ctx):
+    guild = ctx.message.guild
+    await guild.create_text_channel('bot-created-channel')
+
+@client.command()
+async def forcepurge(ctx):
+    guild = ctx.message.guild
+    x = 0
+    for fn in os.listdir('listeners'):
+        target = fn.split('.')[0]
+        listener = Listener.load_listener(DIRECTORY, target)
+        target_members = listener.get_listeners()
+        for member in guild.members:
+            if member.name in target_members and member.name != 'MoneyMan':
+                safe = False
+                for role in member.roles:
+                    if role.name == 'Gold Members' or role.name == 'Gold' or role.name == 'Admins':
+                        safe = True
+                if not safe:
+                    x += 1
+                    listener.remove_listener(member.name)
+                    await member.send('You have been removed from alerts as you are no longer a gold member.\n Please resub to gain access again.\nIf you see this as an error please reach out and contact us.')
+                    print(member.name)
+    await ctx.channel.send('Purged ' + str(x) + ' non gold members from alerts.')
 
 client.run(CREDS)

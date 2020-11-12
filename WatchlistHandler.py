@@ -64,19 +64,22 @@ def handle_watches():
     time.sleep(5)
     while not (dt.datetime.now().hour >= 14 and dt.datetime.now().minute >= 31):
         if path.exists(csv_path):
-            data = pd.read_csv(csv_path)
-            for index, row in data.iterrows():
-                row = row.to_dict()
-                if row['UPLOADED'] == False:
-                    print('SENT ' + row['SYMBOL'] + '<-----------------------')
-                    symbol_keys.append(row['SYMBOL'].upper())
-                    print(','.join(symbol_keys))
-                    quote, REQUEST_ID = TD_Stream.get_data_request([Request('QUOTE', 'SUBS', user_principals, {"keys": ','.join(symbol_keys),"fields": "0,1,2,3,4,5,6,7,8,49"})], REQUEST_ID)
-                    client.send_message(quote)
-                    data.loc[index, 'UPLOADED'] = True
-                    data.to_csv(csv_path, index=False)
-                    break
-            time.sleep(2.5)
+            try:
+                data = pd.read_csv(csv_path)
+                for index, row in data.iterrows():
+                    row = row.to_dict()
+                    if row['UPLOADED'] == False:
+                        print('SENT ' + row['SYMBOL'] + '<-----------------------')
+                        symbol_keys.append(row['SYMBOL'].upper())
+                        print(','.join(symbol_keys))
+                        quote, REQUEST_ID = TD_Stream.get_data_request([Request('QUOTE', 'SUBS', user_principals, {"keys": ','.join(symbol_keys),"fields": "0,1,2,3,4,5,6,7,8,49"})], REQUEST_ID)
+                        client.send_message(quote)
+                        data.loc[index, 'UPLOADED'] = True
+                        data.to_csv(csv_path, index=False)
+                        break
+                time.sleep(2.5)
+            except:
+                time.sleep(2.5)
         else:
             time.sleep(5)
 

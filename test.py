@@ -1,7 +1,121 @@
 import pandas as pd
-COLUMNS = ['SYMBOL', 'DIRECTION', 'THRESHOLD', 'PT', 'AUTHOR', 'UPLOADED']
-data = pd.DataFrame(data=[[1,2,3,4,5,6]], columns=COLUMNS)
-print(type(str(data.head())))
+from io import StringIO
+# df = pd.DataFrame(data=[[1,2,3,4,5,6,7]], columns=['ID', 'TRADER', 'COMMAND', 'TICKER', 'POSITIONS', 'NET_PRICE', 'OPENING'])
+# df.to_csv('trades_db.csv')
+data = pd.read_csv('trades_db.csv', index_col=0)
+def position_df(positions):
+    return pd.read_csv(StringIO(positions), sep=';', index_col=0)
+def price_df(price):
+    return pd.read_csv(StringIO(price), sep='|', index_col=0)
+position = position_df(data.iloc[0]['POSITIONS'])
+price = price_df(position.iloc[0]['price'])
+print(position.head())
+print(price['askPrice'])
+
+
+
+
+#from cStringIO import StringIO
+# COLUMNS = ['SYMBOL', 'DIRECTION', 'THRESHOLD', 'PT', 'AUTHOR', 'UPLOADED']
+# data = pd.DataFrame(data=[[1,2,3,4,5,6], [1,2,3,4,5,6]], columns=COLUMNS)
+# #print(str(data.head()))
+# fake_data = data.to_csv(index=False)
+# cols = ['Fake1', 'csv', 'Fake2']
+# data = pd.DataFrame(data=[[1,fake_data,3],[1,fake_data,3]], columns=cols)
+# data.to_csv('fake_data.csv')
+# data = pd.read_csv('fake_data.csv')
+# print(type(data['csv'][0]))
+# data = pd.read_csv(io.StringIO(data['csv'][0]))
+# print(data.columns)
+
+#.buy BIDU 137 calls 10/30 @1.25
+# csv_path='command_db.csv'
+# TRADE_COLUMNS = ['NAME', 'STRIKE_NUM', 'STRIKE_SEP', 'DIRECTIONAL', 'ORDER_STRUCT', 'DATE_SEP', 'AVERAGE_PRICE', 'AVERAGE_PRICE_SEP']
+# POSITION_COLUMNS = ['Ticker', 'Date', 'Side', 'Strike', 'Price', 'Symbol', 'Closing_Trade', 'Short_Trade', 'Executed', 'Trader', 'Channel', 'Time', 'Active']
+# new_df = pd.DataFrame(data=[['ironcondor',4,'-',False,['-1c', '+2c', '-1p', '+2p'],'/',False,None]], columns=TRADE_COLUMNS)
+
+# #data = pd.read_csv(csv_path, index_col=0)
+# #data = data.append(new_df, ignore_index = True)
+# new_df.to_csv(csv_path)
+
+# def parse_strikes(strike_str, order_struct, strike_split):
+#     strikes = strike_str.split(strike_split)
+#     calls = [(item[:-1], item[-1]) for item in strikes if 'C' in item]
+#     puts = [(item[:-1], item[-1]) for item in strikes if 'P' in item]
+#     call_struct = [(item[2:], item[0]) for item in order_struct if 'C' in item]
+#     put_struct = [(item[2:], item[0]) for item in order_struct if 'P' in item]
+#     call_struct.sort()
+#     put_struct.sort()
+#     calls.sort()
+#     puts.sort()
+#     call_struct = list(zip(calls, call_struct))
+#     put_struct = list(zip(puts, put_struct))
+#     buy_str = ''
+#     sell_str = ''
+#     for option, instruction in call_struct:
+#         if instruction[1] == 'B':
+#             buy_str += option[0] + ' Call strike'
+#         else:
+#             sell_str += option[0] + ' Call strike'
+#     for option, instruction in put_struct:
+#         if instruction[1] == 'B':
+#             buy_str += option[0] + ' Put strike'
+#         else:
+#             sell_str += option[0] + ' Put strike'
+#     return buy_str, sell_str
+
+# parse_strikes('40C-45C-30P-25P', ['BC34', 'SC30', 'SP29', 'BP25'], '-')
+
+
+
+# strike_str = new_df['STRIKE_SEP'].values[0].join([str(item) for item in list(range(40, 40+(5*new_df['STRIKE_NUM'].values[0]), 5))])
+# directional_str = ''
+# if new_df['DIRECTIONAL'].values[0]:
+#     directional_str = ' calls'
+# avg_price_str = ''
+# if new_df['AVERAGE_PRICE'].values[0]:
+#     avg_price_str = new_df['AVERAGE_PRICE_SEP']+'3.40'
+# return_str = '.'+ new_df['NAME'] + ' TSLA' + directional_str + ' ' + strike_str + ' 10' + new_df['DATE_SEP'] + '29 ' + avg_price_str
+# print(return_str.values[0])
+
+# data = pd.read_csv('commands_db.csv')
+# print(data)
+
+# strike_str = data_base['STRIKE_SEP'].values[0].join([str(item) for item in list(range(40, 40+(5*data_base['STRIKE_NUM'].values[0]), 5))])
+# print(data_base['STRIKE_SEP'].values[0])
+# print(strike_str)
+# data_base.to_csv('commands_db.csv')
+# from TDAccount import Account
+# from TDAccount import Position, Trade
+# from DiscordListener import Listener
+# import os
+# from TDRestAPI import Rest_Account
+
+# result, sammy = Account.load_account('accounts', 'SammySnipes')
+# valid = 0
+# print(result, sammy)
+# x = 0
+# remove_position = None
+# for position in sammy.get_positions():
+#     print(position.ticker)
+#     if position.ticker =='APPL':
+#         print(position)
+#         remove_position = position
+# sammy.positions.remove(remove_position)
+# sammy.save_self('accounts')
+# for trade in sammy.get_trades():
+#     open_price = trade.opening_position.price[0]
+#     close_price = trade.closing_position.price['mark'][0]
+#     #print(open_price, close_price)
+#     if not open_price == 0.0:
+#         print((close_price/open_price)-1)
+#         x += (close_price/open_price)-1
+    #amt = 1000/(open_price*100)
+    #print(amt)
+    #print((amt*(close_price*100)) -1000)
+    #x += amt*(close_price*100)
+    #print(trade.opening_position.price[0] - trade.closing_position.price['mark'][0])
+
 # from Watchlist import Watchlist, Watch
 # import _thread as thread
 # import time
