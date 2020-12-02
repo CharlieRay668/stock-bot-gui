@@ -109,7 +109,7 @@ class ClientWebsocket():
             print("thread terminating...")
 
     def on_message(self, ws, message):
-        #print(message)
+        print(message)
         message_decoded = json.loads(message)
         if 'data' in message_decoded.keys():
             data = message_decoded['data'][0]

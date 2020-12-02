@@ -6,10 +6,10 @@ from os import path
 import pandas as pd
 
 DIRECTORY = 'watchlists'
-COLUMNS = ['SYMBOL', 'DIRECTION', 'THRESHOLD', 'PT', 'AUTHOR', 'UPLOADED', 'ALERTED']
+COLUMNS = ['SYMBOL', 'DIRECTION', 'THRESHOLD', 'PT', 'AUTHOR', 'UPLOADED', 'ALERTED', 'CHANNEL']
 
 class Watch:
-    def __init__(self, symbol, direction, threshold, pt, author, uploaded, alerted):
+    def __init__(self, symbol, direction, threshold, pt, author, uploaded, alerted, channel):
         self.symbol = symbol
         self.direction = direction
         self.threshold = float(threshold)
@@ -17,6 +17,7 @@ class Watch:
         self.author = author
         self.uploaded = uploaded
         self.alerted = alerted
+        self.channel = channel
         self.save_self()
 
     def __str__(self):
@@ -27,11 +28,11 @@ class Watch:
         csv_path = DIRECTORY+'/'+today+'_watchlist.csv'
         if path.exists(csv_path):
             data = pd.read_csv(csv_path, index_col=0)
-            new_df = pd.DataFrame(data=[[self.symbol, self.direction, self.threshold, self.pt, self.author, self.uploaded, self.alerted]], columns=COLUMNS)
+            new_df = pd.DataFrame(data=[[self.symbol, self.direction, self.threshold, self.pt, self.author, self.uploaded, self.alerted, self.channel]], columns=COLUMNS)
             data = data.append(new_df, ignore_index = True)
             data.to_csv(csv_path)
         else:
-            data = pd.DataFrame(data=[[self.symbol, self.direction, self.threshold, self.pt, self.author, self.uploaded, self.alerted]], columns=COLUMNS)
+            data = pd.DataFrame(data=[[self.symbol, self.direction, self.threshold, self.pt, self.author, self.uploaded, self.alerted, self.channel]], columns=COLUMNS)
             data.to_csv(csv_path)
 
 

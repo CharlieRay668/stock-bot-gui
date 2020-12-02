@@ -55,6 +55,7 @@ async def watchlist(ctx, *, args):
     args = clean_watch(args)
     print(args)
     if args[0] == 'add':
+        print(args)
         new = Watch(args[1], args[2], args[3], args[4], ctx.author.name, False, False)
         await ctx.channel.send('Added ' + str(new))
     elif args[0] == 'view':

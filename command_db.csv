@@ -1,5 +1,6 @@
 ,NAME,STRIKE_NUM,STRIKE_SEP,DIRECTIONAL,ORDER_STRUCT,DATE_SEP,AVERAGE_PRICE,AVERAGE_PRICE_SEP
 0,standard,1,,True,,/,False,@
 1,ironcondor,4,-,False,"['SC30', 'BC34', 'SP29', 'BP25']",/,False,@
-2,creditspread,2,-,True,"['BC34', 'SC30']",/,False,False
-3,debitspread,2,-,True,"['BC30', 'SC34']",/,False,False
+2,creditspread,2,-,True,"['BC34', 'SC30']",/,False,@
+3,debitspread,2,-,True,"['BC30', 'SC34']",/,False,@
+4,straddle,2,-,False,"['BC30','SP31']",/,False,@

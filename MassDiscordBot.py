@@ -11,8 +11,11 @@ from TDExecutor import TDExecutor
 from multiprocessing import Pool
 import chain_proccessor as cp
 from PIL import Image
+from Watchlist import Watch
 import numpy as np
 import command_handler as ch
+# import WatchlistHandler as watchlist_handler
+# import WatchlistDiscordHandler as watchlist_discord_handler
 
 
 intents = discord.Intents.default()
@@ -23,6 +26,7 @@ look_up = {'01': 'January', '02': 'Febuary', '03': 'March', '04': 'April', '05':
             '06': 'June', '07': 'July', '08': 'August', '09': 'September', '10': 'October', '11': 'November', '12': 'December'}
 
 DIRECTORY = 'listeners'
+WATCHLIST_DIRECTORY = 'watchlists'
 
 MONEY = 713081521925521469
 ENGINE = 713081687516643389
@@ -42,7 +46,6 @@ BOT_TOKEN = 'NzU0MDAyMzEwNTM5MTE2NTQ0.X1uZXw.urRh3pgMuS8IAfD4jAMbJVdO8D4'
 CREDS = BOT_TOKEN
 
 TD_ACCOUNT = Rest_Account('keys.json')
-
 
 def between(upper, lower, location):
     if upper == None or lower == None:
@@ -111,47 +114,6 @@ async def on_ready():
 #                 if splits[0][1:] == command:
 #                     await commands[command](ctx, order = ' '.join(splits[1:]))
 #                     #await ctx.invoke(get_command('buy'))
-
-    # @client.command()
-    # async def check(ctx, *, params):
-    #     if params.split(' ')[0] == 'status':
-    #         if len(params.split(' ')) < 2:
-    #             await ctx.channel.send('Please enter a user to check position status')
-    #         else:
-    #             if '(' in params and ')' in params:
-    #                 start = params.find('(')
-    #                 end = params.find(')')
-    #                 acct_name = params[start+1:end]
-    #             else:
-    #                 acct_name = params.split(' ')[1]
-    #             status, account = Account.load_account('accounts', acct_name)
-    #             if status == 200:
-    #                 embedVar = discord.Embed(title=acct_name+"'s current public positions", description='These may not be fully accurate due to inconsitency in closing of positions. If you dont see a open position you can take that as fact though.', color=0xb3b300)
-    #                 for pos in account.get_positions():
-    #                     embedVar.add_field(name=pos.ticker, value=pos.strike + ' ' + pos.date + ' ' + pos.side, inline=False)
-    #                 await ctx.channel.send(embed=embedVar)
-    #             else:
-    #                 embedVar = discord.Embed(title="Sorry", description='Unable to find user: ' + str(acct_name), color=0xD62121)
-    #                 await ctx.channel.send(embed=embedVar)
-    #     elif params.split(' ')[0] == 'listen':
-    #         if len(params.split(' ')) < 2:
-    #             author_name = ctx.author.name
-    #         else:
-    #             if '(' in params and ')' in params:
-    #                 start = params.find('(')
-    #                 end = params.find(')')
-    #                 author_name = params[start+1:end]
-    #             else:
-    #                 author_name = params.split(' ')[1]
-    #         persons = []
-    #         for fn in os.listdir('listeners'):
-    #             file_name = fn.split('.')[0]
-    #             if author_name in Listener.load_listener('listeners', file_name).get_listeners():
-    #                 persons.append(file_name)
-    #         embedVar = discord.Embed(title="User " + author_name + ' Is following' , description= ', '.join(persons), color=0x00e6b8)
-    #         await ctx.channel.send(embed=embedVar)
-    #     else:
-    #         await ctx.channel.send('Unkown check command')
 
 @client.command()
 async def checklisten(ctx):
@@ -233,12 +195,213 @@ async def sendDM(member, message):
 def check_member_id(params):
     members = client.get_guild(UTOPIA).members
     for param in params.split(' '):
-        if '@!' in param:
-            name_id = param.replace('@!', '').replace('<', '').replace('>', '')
+        if '@' in param:
+            name_id = param.replace('@', '').replace('@!', '').replace('<', '').replace('>', '')
             for member in members:
                 if int(name_id) == member.id:
                     return member.name
     return None
+
+def clean_watch(args):
+    args = args.lower()
+    symbols = ['~', '`', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '-', '=', '+']
+    banned_words = ['pt','pt:','profit', 'target', 'profittarget', 'target', 'tg', 'pr', 'pd', 'py', 'pg', 'pf', 'call', 'calls', 'put' , 'puts', 'p', 'c']
+    banned_words = banned_words + symbols
+    args = [arg for arg in args.split(' ') if arg not in banned_words]
+    return args 
+
+def admin_channel_lookup(username):
+    admin_channel = {'Charlie678':693616063174279270,
+                    'SammySnipes':713082942527897650,
+                    'Engine Trades':713081687516643389,
+                    'MoneyMan':713081521925521469,
+                    'Adam B':738910845702242305}
+    if username in admin_channel.keys():
+        return admin_channel[username]
+    else:
+        return None
+
+@client.command()
+async def watchlist(ctx, *, args):
+    args = clean_watch(args)
+    print(args)
+    if args[0] == 'start':
+        # watchlist_handler.handle_watches()
+        # watchlist_discord_handler.start_discord_watchlist()
+        await ctx.channel.send('Started watchlist')
+    elif args[0] == 'add':
+        channel = admin_channel_lookup(ctx.author.name)
+        new = Watch(args[1], args[2], args[3], args[4], ctx.author.name, False, 0, channel)
+        await ctx.channel.send('Added ' + str(new))
+    elif args[0] == 'view':
+        today = dt.date.today().strftime("%Y_%m_%d")
+        csv_path = WATCHLIST_DIRECTORY+'/'+today+'_watchlist.csv'
+        if path.exists(csv_path):
+            params = ' '.join(args)
+            if len(params.split(' ')) < 2:
+                name = ctx.author.name
+            else:
+                name = ''
+                if check_member_id(params) is None:
+                    if '(' in params and ')' in params:
+                        start = params.find('(')
+                        end = params.find(')')
+                        name = params[start+1:end]
+                    else:
+                        name = params.split(' ')[1]
+                else:
+                    name = check_member_id(params)
+            data = pd.read_csv(csv_path)
+            embedVar = discord.Embed(title=name + "'s Watchlist for today", description='', color=0xb3b300)
+            signal_dict = {0:'Not Near or Crossed',
+                            1:'Near but not Crossed',
+                            2:'Crossed Threshold',
+                            3:'Near Profit Target',
+                            4:'Crossed Threshold and Profit Target'}
+            for index, row in data.iterrows():
+                print(row)
+                if row['AUTHOR'] == name:
+                    #row = row[1].to_dict()
+                    first = 'PUTS'
+                    if row['DIRECTION'] == 'above':
+                        first = 'CALLS'
+                    embedVar.add_field(name=row['SYMBOL'].upper(), value = first + ' ' + row['DIRECTION'].upper() + ' ' + str(row['THRESHOLD']) + ' Profit Target: ' + str(row['PT']) + ' ' + str(signal_dict[row['ALERTED']]), inline=False)
+            await ctx.channel.send(embed = embedVar)
+        else:
+            await ctx.channel.send("Sorry, I can't seem to find any watchlists for today")
+    elif args[0] == 'delete':
+        pass
+
+@client.command()
+async def close_expirations(ctx):
+    server_main = client.get_guild(UTOPIA)
+    trades = pd.read_csv('trades_db.csv', index_col=0)
+    positions = pd.read_csv('positions_db.csv', index_col=0)
+    logs = open('expired_positions.txt', 'a+')
+    trader_dict = {}
+    for trader in trades['TRADER']:
+        trader_dict[trader] = []
+    for index, row in trades.iterrows():
+        date = row['DATE'].split('/')
+        if not row['CLOSED']:
+            try:
+                if len(date) == 3:
+                    time =dt.datetime.strptime(row['DATE'],'%m/%d/%y')
+                elif len(date) > 3:
+                    date_str ='/'.join(date[:3])
+                    time =dt.datetime.strptime(date_str,'%m/%d/%y')
+                else:
+                    date_str ='/'.join(date)+'/20'
+                    time =dt.datetime.strptime(date_str,'%m/%d/%y')
+                if time < dt.datetime.now():
+                    trade_id = row['ID']
+                    pos = positions[positions['id'] == trade_id]
+                    num = 0
+                    closed_positions = []
+                    for i, p in pos.iterrows():
+                        num += 1
+                        closed_positions.append(p['ticker'] + ' ' + str(p['strike']) + ' ' + p['side'] + ' ' + p['date'] +  ' ' + str(p['askPrice']) + ' ' +str(time) + ' ' + str(p['id']))
+                    trader_dict[row['TRADER']].append(closed_positions)
+            except:
+                print('failed on ' + row['DATE'])
+    for key in trader_dict.keys():
+        if len(trader_dict[key]) > 0:
+            for member in server_main.members:
+                if member.name == key:
+                    send_str = 'This is a message updating you about unclosed expired positions that you held in the competition\n'
+                    send_str += 'If your position expired ITM, the bot will recognize that and calculate profit accordingly\n'
+                    send_str += 'If your position expired OTM, the bot will determine if there was an error closing the position or if the position was never closed\n'
+                    send_str += 'If the bot determined there was an error when closing the position you will not receive any penalty to your leaderboard ranking\n'
+                    send_str += 'If the bot determined that the position was simply forgotten about, there will be a -20% penalty to give grace and simulate proper risk management\n'
+                    send_str += 'Going forward, ANY position that expired OTM will count as a -100% penalty, make sure to close out your positions in the future.\n'
+                    for trade in trader_dict[key]:
+                        if len(trade) > 1:
+                            profit = 0
+                            for pos in trade:
+                                ticker = pos.split(' ')[0]
+                                strike = pos.split(' ')[1]
+                                side = pos.split(' ')[2]
+                                date = pos.split(' ')[3]
+                                price = pos.split(' ')[4]
+                                time = pos.split(' ')[5]
+                                trade_id = pos.split(' ')[7]
+                                time = dt.datetime.strptime(time,'%Y-%m-%d')
+                                num_days = (dt.datetime.now()-time).days
+                                hist = TD_ACCOUNT.history(ticker, 1, 0, days_ago=num_days)
+                                eod_price = hist.iloc[[-1]]['close'][0]
+                                intrinsic_value = eod_price-float(strike)
+                                if side == 'PUTS':
+                                    intrinsic_value = intrinsic_value*-1
+                                if float(price) == 0.0:
+                                    profit += 0
+                                    send_str += '**' + ticker + ' ' + str(strike) + ' ' + str(side) + ' ' + str(date) + ' expired ERROR reciving ' + '0' + '% ' + ' (No penalty)**\n'
+                                elif intrinsic_value > 0:
+                                    profit += round((float(intrinsic_value/abs(float(price)))-1)*100,2)
+                                    send_str += '**' + ticker + ' ' + str(strike) + ' ' + str(side) + ' ' + str(date) + ' expired ITM reciving ' + str(round((float(intrinsic_value/abs(float(price)))-1)*100,2)) + '% ' + 'Calculated profit**\n'
+                                else:
+                                    profit += -20
+                                    send_str += '**' + ticker + ' ' + str(strike) + ' ' + str(side) + ' ' + str(date) + ' expired OTM reciving ' + '-20' + '% ' + 'Penalty**\n'
+                        else:
+                            pos = trade[0]
+                            ticker = pos.split(' ')[0]
+                            strike = pos.split(' ')[1]
+                            side = pos.split(' ')[2]
+                            date = pos.split(' ')[3]
+                            price = pos.split(' ')[4]
+                            time = pos.split(' ')[5]
+                            trade_id = pos.split(' ')[7]
+                            
+                            time = dt.datetime.strptime(time,'%Y-%m-%d')
+                            num_days = (dt.datetime.now()-time).days
+                            #print(ticker, strike, side, date, price)
+                            hist = TD_ACCOUNT.history(ticker, 1, 0, days_ago=num_days)
+                            eod_price = hist.iloc[[-1]]['close'][0]
+                            intrinsic_value = eod_price-float(strike)
+                            if side == 'PUTS':
+                                intrinsic_value = intrinsic_value*-1
+                            if float(price) == 0.0:
+                                profit = 0
+                                send_str += '**' + ticker + ' ' + str(strike) + ' ' + str(side) + ' ' + str(date) + ' expired ERROR reciving ' + str(profit) + '% ' + ' (No penalty)**\n'
+                            elif intrinsic_value > 0:
+                                profit = round((float(intrinsic_value/abs(float(price)))-1)*100,2)
+                                send_str += '**' + ticker + ' ' + str(strike) + ' ' + str(side) + ' ' + str(date) + ' expired ITM reciving ' + str(profit) + '% ' + 'Calculated profit**\n'
+                            else:
+                                if member.name != 'Eddy_Trades💸⭕🖨' and member.name != 'Visvim':
+                                    profit = -20
+                                    send_str += '**' + ticker + ' ' + str(strike) + ' ' + str(side) + ' ' + str(date) + ' expired OTM reciving ' + str(profit) + '% ' + 'Penalty**\n'
+                                else:
+                                    profit = 0
+                                    send_str += '**' + ticker + ' ' + str(strike) + ' ' + str(side) + ' ' + str(date) + ' expired ERROR reciving ' + str(profit) + '% ' + ' (No penalty)**\n' 
+                        for index in trades.index:
+                            if trades.loc[index,'ID']==trade_id:
+                                trades.loc[index, 'CLOSED'] = True
+                                trades.loc[index, 'PROFIT'] = float(profit)
+                        trades.to_csv('trades_db.csv')
+                        positions = pd.read_csv('positions_db.csv', index_col=0)
+                        positions = positions[positions['id'] == trade_id]
+                        new_positions = []
+                        new_data ={'bidPrice':None,'askPrice':None,'delta':None,'theta':None,'gamma':None,'volatility':None,'description':None,'assetType':None}
+                        for index, position_row in positions.iterrows():
+                            new_position = []
+                            for key in new_data.keys():
+                                new_data[key] = 'Expired'
+                            for index, data_point in enumerate(position_row):
+                                if index == len(position_row)-1:
+                                    new_position.append(True)
+                                else:
+                                    new_position.append(data_point)
+                            temp_columns = ['id', 'ticker', 'date', 'side', 'strike', 'bidPrice', 'askPrice', 'delta', 'theta', 'gamma', 'volatility', 'description', 'assetType', 'symbol', 'short_trade', 'executed', 'trader', 'channel', 'time','closing']
+                            position_dict = dict(zip(temp_columns, new_position))
+                            for key in new_data.keys():
+                                position_dict[key] = new_data[key]
+                            new_positions.append(position_dict.values())
+                        columns = ['id', 'ticker', 'date', 'side', 'strike', 'bidPrice', 'askPrice', 'delta', 'theta', 'gamma', 'volatility', 'description', 'assetType', 'symbol', 'short_trade', 'executed', 'trader', 'channel', 'time','closing']
+                        new_positions_df = pd.DataFrame(data=new_positions, columns=columns)
+                        position_db = pd.read_csv('positions_db.csv', index_col=0)
+                        position_db = position_db.append(new_positions_df, ignore_index = True)
+                        position_db.to_csv('positions_db.csv')
+                    print(member.name)
+                    await member.send(send_str)
 
 @client.command()
 async def record(ctx, *, params):
@@ -257,7 +420,7 @@ def calc_leaderboard():
     trades_db = pd.read_csv('trades_db.csv')
     member_profits = {}
     for index, row in trades_db.iterrows():
-        if not (row['TRADER'] == 'SammySnipes' or row['TRADER']  == 'MoneyMan' or row['TRADER']  == 'Engine Trades'):
+        if not (row['TRADER'] == 'SammySnipes' or row['TRADER']  == 'MoneyMan' or row['TRADER']  == 'Engine Trades' or row['TRADER'] == 'TacoTradez🌮'):
             if not pd.isnull(row['PROFIT']):
                 if row['TRADER'] in member_profits.keys():
                     if row['PROFIT'] > 0:
@@ -271,11 +434,20 @@ def calc_leaderboard():
                         member_profits[row['TRADER']] = (row['PROFIT'], 0, 1)
     leaderboard = []
     for key in member_profits.keys():
-        leaderboard.append((member_profits[key][0], member_profits[key][1], member_profits[key][2], key))
+        profit = round(member_profits[key][0],2)
+        win = member_profits[key][1]
+        loss = member_profits[key][2]
+        if loss == 0:
+            score = (profit/100)
+        else:
+            score = (profit/100) * (win/(loss+win))
+        score += (win*0.7)
+        score -= (loss*0.7)
+        leaderboard.append((round(score*10,2), key))
     leaderboard.sort(reverse=True)
     return leaderboard
 
-@client.command()
+@client.command(aliases=['check'])
 async def view(ctx, *, params):
     if params.split(' ')[0] == 'commands':
         await ctx.channel.send("\n**OPENING COMMANDS**\n'in', 'bought', 'grabbed', 'grabbing', 'buying', 'bto', 'btc','swing', 'swinging', 'buy','open'\n**CLOSING COMMANDS**\n'cut', 'sold', 'cutting', 'selling', 'stc', 'closing', 'sto', 'sell'")
@@ -312,7 +484,7 @@ async def view(ctx, *, params):
             leaderboard = calc_leaderboard()
             location = -1
             for index, person in enumerate(leaderboard):
-                if person[3] == name:
+                if person[1] == name:
                     location = index
             embedVar = discord.Embed(title="Stats for user " + name, description='', color=0x00e6b8)
             embedVar.add_field(name='% Profit', value=str(profit) + '%', inline=False)
@@ -323,8 +495,8 @@ async def view(ctx, *, params):
     elif params.split(' ')[0] == 'leaderboard':
         embedVar = discord.Embed(title="Leaderboard for month of " + look_up[dt.datetime.today().strftime('%m')], description='', color=0x00e6b8)
         leaderboard = calc_leaderboard()
-        for index, person in enumerate(leaderboard[:11]):
-            embedVar.add_field(name='#' + str(index+1), value=person[3] + ' ' + str(person[0]) + '% ' + str(person[1]) + ' wins ' + str(person[2]) + ' losses', inline=False)
+        for index, person in enumerate(leaderboard[:10]):
+            embedVar.add_field(name='#' + str(index+1), value=person[1] + ' Score ' + str(person[0]) + ' pts', inline=False)
         await ctx.channel.send(embed=embedVar)
     elif params.split(' ')[0] == 'status':
         if len(params.split(' ')) < 2:
@@ -413,8 +585,12 @@ async def close(ctx, *, order):
     server_main = client.get_guild(UTOPIA)
     order = order.lower().replace('$', '')
     response, message = ch.handle_closing_order(order, ctx.author.name, ctx.channel.name, TD_ACCOUNT)
-    if ctx.author.name == 'SammySnipes' or ctx.author.name == 'MoneyMan' or ctx.author.name == 'Engine Trades':
-        message = message.split('for a recorded')[0]
+    print(ctx.author.name)
+    if (ctx.author.name == 'SammySnipes' or ctx.author.name == 'MoneyMan' or ctx.author.name == 'Engine Trades' or ctx.author.name =='Charlie678'):
+        print('Located author name')
+        print(message)
+        message = message.split('for recorded')[0]
+        print(message)
     if not response == 101:
         await ctx.channel.send(message)
     else:

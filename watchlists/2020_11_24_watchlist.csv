@@ -1,0 +1,8 @@
+Unnamed: 0,SYMBOL,DIRECTION,THRESHOLD,PT,AUTHOR,UPLOADED,ALERTED,CHANNEL
+0,dal,above,38.76,41.48,SammySnipes,True,2,7.130829425278976e+17
+1,twtr,above,45.03,46.38,SammySnipes,True,2,7.130829425278976e+17
+2,wmt,above,151.42,152.53,SammySnipes,True,2,7.130829425278976e+17
+3,lulu,above,351.97,356.27,SammySnipes,True,2,7.130829425278976e+17
+4,unh,above,335.66,341.24,SammySnipes,True,2,7.130829425278976e+17
+5,jpm,above,118.33,121.4,SammySnipes,True,4,7.130829425278976e+17
+6,amzn,above,3140.0,3160.0,nonperformer,True,1,

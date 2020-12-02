@@ -1,14 +1,16 @@
-NFLX is crossing **above** 490.61 current price 492.85 @here
-OKTA is crossing **above** 220.96 current price 224.45 @here
-BABA is crossing **above** 310.0 current price 311.8036 @here
-ZM is crossing **above** 520.0 current price 535.01 @here
-TWTR is crossing **above** 50.5 current price 50.5899 @here
-ROKU is crossing **above** 228.0 current price 228.21 @here
-AMZN is crossing **above** 3000.0 current price 3265.08 @here
-Closing down stream
-ZM is crossing **above** 540.5 current price 546 @here
-NKE is crossing **below** 127.75 current price 125.9 @here
-MCD is crossing **below** 222.0 current price 219.9 @here
-NFLX is crossing **above** 490.6 current price 490.83 @here
-PINS is crossing **above** 52.95 current price 53 @here
-Closing down stream
+NKLA is **near below** 19.62 current price 17.82 @here//:737773053148266666 ED
+NKLA is **crossing below** 19.62 current price 17.885 @here//:737773053148266666 ED
+NKLA is **near profit target** 19.11 current price 17.99 @here//:737773053148266666 ED
+NKLA is **crossing below profit target** 19.11 current price 17.97 @here//:737773053148266666 ED
+PTON is **near below** 115.31 current price 113.759 @here//:737773053148266666 ED
+PTON is **crossing below** 115.31 current price 113.91 @here//:737773053148266666 ED
+PTON is **near profit target** 114.12 current price 113.84 @here//:737773053148266666 ED
+PTON is **crossing below profit target** 114.12 current price 113.8136 @here//:737773053148266666 ED
+CHWY is **near above** 78.19 current price 78.1 @here//:737773053148266666 ED
+ROKU is **near below** 291.51 current price 291.8823 @here//:737773053148266666 ED
+ROKU is **crossing below** 291.51 current price 291.385 @here//:737773053148266666 ED
+ROKU is **near profit target** 288.31 current price 288.8 @here//:737773053148266666 ED
+ROKU is **crossing below profit target** 288.31 current price 287.822 @here//:737773053148266666 ED
+CHWY is **crossing above** 78.19 current price 78.25 @here//:737773053148266666 ED
+SPCE is **near above** 28.69 current price 28.65 @here//:737773053148266666 ED
+SPCE is **crossing above** 28.69 current price 28.6981 @here//:737773053148266666 ED
