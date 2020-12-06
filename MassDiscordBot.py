@@ -14,9 +14,13 @@ from PIL import Image
 from Watchlist import Watch
 import numpy as np
 import command_handler as ch
+from account_handler import AccountHandler
+import math
+import locale
 # import WatchlistHandler as watchlist_handler
 # import WatchlistDiscordHandler as watchlist_discord_handler
 
+locale.setlocale(locale.LC_ALL, 'en_US')
 
 intents = discord.Intents.default()
 intents.members = True
@@ -46,6 +50,8 @@ BOT_TOKEN = 'NzU0MDAyMzEwNTM5MTE2NTQ0.X1uZXw.urRh3pgMuS8IAfD4jAMbJVdO8D4'
 CREDS = BOT_TOKEN
 
 TD_ACCOUNT = Rest_Account('keys.json')
+ACCOUNT_HANDLER = AccountHandler()
+
 
 def between(upper, lower, location):
     if upper == None or lower == None:
@@ -224,7 +230,6 @@ def admin_channel_lookup(username):
 @client.command()
 async def watchlist(ctx, *, args):
     args = clean_watch(args)
-    print(args)
     if args[0] == 'start':
         # watchlist_handler.handle_watches()
         # watchlist_discord_handler.start_discord_watchlist()
@@ -259,7 +264,6 @@ async def watchlist(ctx, *, args):
                             3:'Near Profit Target',
                             4:'Crossed Threshold and Profit Target'}
             for index, row in data.iterrows():
-                print(row)
                 if row['AUTHOR'] == name:
                     #row = row[1].to_dict()
                     first = 'PUTS'
@@ -327,7 +331,7 @@ async def close_expirations(ctx):
                                 trade_id = pos.split(' ')[7]
                                 time = dt.datetime.strptime(time,'%Y-%m-%d')
                                 num_days = (dt.datetime.now()-time).days
-                                hist = TD_ACCOUNT.history(ticker, 1, 0, days_ago=num_days)
+                                hist = TD_ACCOUNT.history(ticker, 1, 40, frequency_type="daily", period_type='year')
                                 eod_price = hist.iloc[[-1]]['close'][0]
                                 intrinsic_value = eod_price-float(strike)
                                 if side == 'PUTS':
@@ -354,7 +358,7 @@ async def close_expirations(ctx):
                             time = dt.datetime.strptime(time,'%Y-%m-%d')
                             num_days = (dt.datetime.now()-time).days
                             #print(ticker, strike, side, date, price)
-                            hist = TD_ACCOUNT.history(ticker, 1, 0, days_ago=num_days)
+                            hist = TD_ACCOUNT.history(ticker, 1, 40, frequency_type="daily", period_type='year')
                             eod_price = hist.iloc[[-1]]['close'][0]
                             intrinsic_value = eod_price-float(strike)
                             if side == 'PUTS':
@@ -418,20 +422,31 @@ async def record(ctx, *, params):
 
 def calc_leaderboard():
     trades_db = pd.read_csv('trades_db.csv')
+    positions_db = pd.read_csv('positions_db.csv')
     member_profits = {}
     for index, row in trades_db.iterrows():
-        if not (row['TRADER'] == 'SammySnipes' or row['TRADER']  == 'MoneyMan' or row['TRADER']  == 'Engine Trades' or row['TRADER'] == 'TacoTradez🌮'):
-            if not pd.isnull(row['PROFIT']):
-                if row['TRADER'] in member_profits.keys():
-                    if row['PROFIT'] > 0:
-                        member_profits[row['TRADER']] = (member_profits[row['TRADER']][0] + row['PROFIT'], member_profits[row['TRADER']][1] + 1, member_profits[row['TRADER']][2])
-                    else:
-                        member_profits[row['TRADER']] = (member_profits[row['TRADER']][0] + row['PROFIT'], member_profits[row['TRADER']][1], member_profits[row['TRADER']][2] + 1)
-                else:
-                    if row['PROFIT'] >= -0.1:
-                        member_profits[row['TRADER']] = (row['PROFIT'], 1, 0)
-                    else:
-                        member_profits[row['TRADER']] = (row['PROFIT'], 0, 1)
+        trade_id = row['ID']
+        linked_positions = positions_db[positions_db['id'] == trade_id]
+        sum_closed = 0
+        for index, pos_row in linked_positions.iterrows():
+            if pos_row['closing']:
+                sum_closed += 1
+        if sum_closed >= len(linked_positions)/2:
+            for index, pos_row in linked_positions.iterrows():
+                if pos_row['closing']:
+                    if not dt.datetime.strptime(pos_row['time'].split(' ')[0], '%Y-%m-%d').month < dt.datetime.now().month:                  
+                        if not (row['TRADER'] == 'SammySnipes' or row['TRADER']  == 'MoneyMan' or row['TRADER']  == 'Engine Trades' or row['TRADER'] == 'TacoTradez🌮'):
+                            if not pd.isnull(row['PROFIT']):
+                                if row['TRADER'] in member_profits.keys():
+                                    if row['PROFIT'] > 0:
+                                        member_profits[row['TRADER']] = (member_profits[row['TRADER']][0] + row['PROFIT'], member_profits[row['TRADER']][1] + 1, member_profits[row['TRADER']][2])
+                                    else:
+                                        member_profits[row['TRADER']] = (member_profits[row['TRADER']][0] + row['PROFIT'], member_profits[row['TRADER']][1], member_profits[row['TRADER']][2] + 1)
+                                else:
+                                    if row['PROFIT'] >= -0.1:
+                                        member_profits[row['TRADER']] = (row['PROFIT'], 1, 0)
+                                    else:
+                                        member_profits[row['TRADER']] = (row['PROFIT'], 0, 1)
     leaderboard = []
     for key in member_profits.keys():
         profit = round(member_profits[key][0],2)
@@ -447,6 +462,132 @@ def calc_leaderboard():
     leaderboard.sort(reverse=True)
     return leaderboard
 
+def view_account(name):
+    response_code, response = ACCOUNT_HANDLER.view_account(name)
+    if response_code == 400:
+        return 400, "**ERROR**\n Hmm, it doesn't seem like you have an account. Type .account create to create one"
+    elif response_code == 200:
+        embedVar = discord.Embed(title="Account info for user " + name, description='', color=0x00e6b8)
+        embedVar.add_field(name='Porfolio Value', value='$' + locale.format_string("%d", response['port_value'], grouping=True), inline=False)
+        embedVar.add_field(name='Default Trade Type', value = response['default_type'])
+        trade_amount = ''
+        if response['default_type'] == 'CASH':
+            trade_amount = '$' + locale.format_string("%d", response['default_amount'], grouping=True)
+        elif response['default_type'] == 'NUMERIC':
+            trade_amount = locale.format_string("%d", response['default_amount'], grouping=True) + ' contracts'
+        embedVar.add_field(name='Default Trade Amount', value=trade_amount, inline=True)
+        if type(response['tradingview']) is not str:
+            pass
+        else:
+            embedVar.add_field(name='Tradingview account', value=response['tradingview'], inline=False)
+        return 200, embedVar
+
+@client.command()
+async def account(ctx, *, params):
+    command_name = params.split(' ')[0]
+    if command_name == 'link':
+        response_code, response = ACCOUNT_HANDLER.edit_value(ctx.author.name, 'tradingview', ' '.join(params.split(' ')[1:]))
+        if response_code == 400:
+            await ctx.channel.send('**ERROR**\n Unable to find tradingview name in command')
+        elif response_code == 200:
+            await ctx.channel.send('**SUCCESS**\n Linked trading view account ' + ' '.join(params.split(' ')[1:]) + ' to user ' + ctx.author.name)
+    elif command_name == 'view':
+            response_code, message = view_account(ctx.author.name)
+            if response_code == 200:
+                await ctx.channel.send(embed=message)
+            else:
+                await ctx.channel.send(message)
+    elif command_name == 'edit':
+        def check(author):
+            def inner_check(message): 
+                if message.author != author:
+                    return False
+                else:
+                    return True
+            return inner_check
+        await ctx.channel.send('Which part of your account would you like to edit? Choices are, Trade Type, Trade Amount, and Tradingview. Please type those words exaclty.')
+        msg = await client.wait_for('message', timeout=30.0, check=check(ctx.author))
+        msg = msg.content.lower()
+        if msg == 'trade type':
+            await ctx.channel.send('Great, editing your Default Trade Type.\n Currently this value is set as ' + ACCOUNT_HANDLER.get_value(ctx.author.name, 'default_type')[1] + '\n Would you like to change this?')
+            msg = await client.wait_for('message', timeout=30.0, check=check(ctx.author))
+            msg = msg.content.lower()
+            if msg == 'yes' or msg == 'y' or msg == 'true':
+                current_val = ACCOUNT_HANDLER.get_value(ctx.author.name, 'default_type')[1]
+                next_val = ''
+                if current_val == 'CASH':
+                    next_val = 'NUMERIC'
+                    explanation = ' (Your trades will be specified by number of contracts instead of dollar value)'
+                else:
+                    next_val = 'CASH'
+                    explanation = ' (Your trades will be specified by dollar value instead of number of contracts)'
+                ACCOUNT_HANDLER.edit_value(ctx.author.name, 'default_type', next_val)
+                await ctx.channel.send('Got it! Changed your trade type to ' + next_val + explanation)
+                if next_val == 'CASH':
+                    await ctx.channel.send('How much money do you want your default trade to be worth? Good risk managment dictates anywhere from 1-5%% of your portfolio. Please only enter numeric values.')
+                elif next_val == 'NUMERIC':
+                    await ctx.channel.send('How many contracts do you want your default trade to be worth? Please only enter numeric values.')
+                msg = await client.wait_for('message', timeout=30.0, check=check(ctx.author))
+                msg = msg.content.lower().replace('$', '').replace(',', '')
+                print(msg)
+                print(float(msg))
+                ACCOUNT_HANDLER.edit_value(ctx.author.name, 'default_amount', float(msg))
+                try:
+                    msg = float(msg)
+                    ACCOUNT_HANDLER.edit_value(ctx.author.name, 'default_amount', float(msg))
+                    if next_val == 'CASH':
+                        await ctx.channel.send('Got it. Your trades will now be worth $' + str(msg))
+                    elif next_val == 'NUMERIC':
+                        await ctx.channel.send('Got it. Your trades will now be ' + str(msg) + ' contracts')
+                except:
+                    await ctx.channel.send('Unable to parse amount. Please only enter an integer amount')
+            else:
+                await ctx.channel.send('Alright, canceling edit.')
+        elif msg == 'trade amount':
+            current_val = ACCOUNT_HANDLER.get_value(ctx.author.name, 'default_type')[1]
+            if current_val == 'CASH':
+                    await ctx.channel.send('How much money do you want your default trade to be worth? Good risk managment dictates anywhere from 1-5%% of your portfolio. Please only enter numeric values.')
+            elif current_val == 'NUMERIC':
+                await ctx.channel.send('How many contracts do you want your default trade to be worth? Please only enter numeric values.')
+            msg = await client.wait_for('message', timeout=30.0, check=check(ctx.author))
+            msg = msg.content.lower().replace('$', '').replace(',', '')
+            print(msg)
+            float(msg)
+            try:
+                msg = float(msg)
+                ACCOUNT_HANDLER.edit_value(ctx.author.name, 'default_amount', msg)
+                if next_val == 'CASH':
+                    await ctx.channel.send('Got it. Your trades will now be worth $' + str(msg))
+                elif next_val == 'NUMERIC':
+                    await ctx.channel.send('Got it. Your trades will now be ' + str(msg) + ' contracts')
+            except:
+                await ctx.channel.send('Unable to parse amount. Please only enter an integer amount')
+        elif msg == 'tradingview':
+            await ctx.channel.send('Please specify what your new tradingview account is.')
+            msg = await client.wait_for('message', timeout=30.0, check=check(ctx.author))
+            msg = msg.content
+            ACCOUNT_HANDLER.edit_value(ctx.author.name, 'tradingview', msg)
+            await ctx.channel.send('Got it! Updated tradingview username to ' + msg)
+    elif command_name == 'create':
+        if not ACCOUNT_HANDLER.check_existnace(ctx.author.name):
+            name = ctx.author.name
+            port_value = 200000
+            default_type = 'CASH'
+            default_amount = 10000
+            tradingview = None
+            ACCOUNT_HANDLER.add_row([name, port_value, default_type, default_amount, tradingview])
+            await ctx.channel.send('Created account for ' + ctx.author.name)
+        else:
+            await ctx.channel.send('Looks like you already have an account!')
+    # elif command_name == 'init':
+    #     main_server = client.get_guild(UTOPIA)
+    #     for member in main_server.members:
+    #         name = member.name
+    #         port_value = 200000
+    #         default_type = 'CASH'
+    #         default_amount = 10000
+    #         tradingview = None
+    #         ACCOUNT_HANDLER.add_row([name, port_value, default_type, default_amount, tradingview])
 @client.command(aliases=['check'])
 async def view(ctx, *, params):
     if params.split(' ')[0] == 'commands':
@@ -564,6 +705,12 @@ async def view(ctx, *, params):
                 persons.append(file_name)
         embedVar = discord.Embed(title="User " + author_name + ' Is following' , description= ', '.join(persons), color=0x00e6b8)
         await ctx.channel.send(embed=embedVar)
+    elif params.split(' ')[0] == 'account':
+            response_code, message = view_account(ctx.author.name)
+            if response_code == 200:
+                await ctx.channel.send(embed=message)
+            else:
+                await ctx.channel.send(message)
     else:
         await ctx.channel.send('Unkown view command')
 
@@ -571,7 +718,7 @@ async def view(ctx, *, params):
 async def discordopen(ctx, *, order):
     server_main = client.get_guild(UTOPIA)
     order = order.lower().replace('$', '')
-    response, message = ch.classic_open(order, ctx.author.name, ctx.channel.name, TD_ACCOUNT)
+    response, message = ch.handle_open(order, ctx.author.name, ctx.channel.name, TD_ACCOUNT)
     await ctx.channel.send(message)
     if response == 200:
         for member in broadcast(ctx, server_main):

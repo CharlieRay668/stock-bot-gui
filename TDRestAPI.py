@@ -239,7 +239,7 @@ class Rest_Account:
             response = self.session.post(url=endpoint, json=payload, headers=headers, timeout=20)
         return response
 
-    def history(self, ticker, frequency, days, days_ago=0, frequency_type="minute", need_extended_hours_data=False):
+    def history(self, ticker, frequency, days, days_ago=0, frequency_type="minute", need_extended_hours_data=False, period_type=False):
         """ Compiles a DataFrame containing candles for the given ticker
 
         Args:
@@ -249,6 +249,7 @@ class Rest_Account:
             days_ago (int, optional): The most recent candle will be this many days old. Defaults to 0.
             frequency_type (str, optional): The units of frequency. minute, daily, weekly, or monthly. Defaults to "minute".
             need_extended_hours_data (bool, optional): True returns extended hours data, False returns market hours only. Defaults to False.
+            period_type(str, optional): If using frequency_type other than minute change period to be a larger unit than frequency_type. Defaults to day.
 
         Returns:
             DataFrame: With columns open, high, low, close, volume and index datetime
@@ -267,8 +268,8 @@ class Rest_Account:
         headers = {
             "Authorization": "Bearer " + self.access_token
         }
-
         payload = {
+            "periodType": period_type,
             "frequencyType": frequency_type,
             "frequency": frequency,
             "endDate": end_date_ms,

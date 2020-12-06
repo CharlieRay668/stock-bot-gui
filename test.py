@@ -1,16 +1,35 @@
 import pandas as pd
-from io import StringIO
-# df = pd.DataFrame(data=[[1,2,3,4,5,6,7]], columns=['ID', 'TRADER', 'COMMAND', 'TICKER', 'POSITIONS', 'NET_PRICE', 'OPENING'])
-# df.to_csv('trades_db.csv')
-data = pd.read_csv('trades_db.csv', index_col=0)
-def position_df(positions):
-    return pd.read_csv(StringIO(positions), sep=';', index_col=0)
-def price_df(price):
-    return pd.read_csv(StringIO(price), sep='|', index_col=0)
-position = position_df(data.iloc[0]['POSITIONS'])
-price = price_df(position.iloc[0]['price'])
-print(position.head())
-print(price['askPrice'])
+from account_handler import AccountHandler
+
+data = ['Charlie678', ['Charlie678', 200200, 'CASH', 5000, 'octotoo']]
+index = data[0]
+row = data[1]
+ACCOUNT_HANDLER = AccountHandler()
+print(ACCOUNT_HANDLER.view_account(index))
+# df = ACCOUNT_HANDLER.get_db()
+# new_df = pd.DataFrame([[1,2,3,4]], columns = df.columns)
+# df = df.append(new_df, ignore_index = True)
+# df.to_csv('accounts_db.csv')
+
+
+# import math
+# from io import StringIO
+# # df = pd.DataFrame(data=[[1,2,3,4,5,6,7]], columns=['ID', 'TRADER', 'COMMAND', 'TICKER', 'POSITIONS', 'NET_PRICE', 'OPENING'])
+# # df.to_csv('trades_db.csv')
+# data = pd.read_csv('trades_db.csv', index_col=0)
+# #print(type(data['PROFIT'][-1 ]))
+# for index, item in enumerate(data['PROFIT']):
+#     if data['CLOSED'][index] and math.isnan(item):
+#         print(index)
+#         print(item)
+# def position_df(positions):
+#     return pd.read_csv(StringIO(positions), sep=';', index_col=0)
+# def price_df(price):
+#     return pd.read_csv(StringIO(price), sep='|', index_col=0)
+# position = position_df(data.iloc[0]['POSITIONS'])
+# price = price_df(position.iloc[0]['price'])
+# print(position.head())
+# print(price['askPrice'])
 
 
 

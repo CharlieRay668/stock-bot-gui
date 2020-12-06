@@ -25,10 +25,10 @@
 23,c65fdbfd25bf11ebbfd43800255995ba,Visvim,standard,AMZN,1,-9.75,True,11/13,9.3,True,0.1
 24,ceac96dd25bf11eb8d283800255995ba,noaaa,standard,NIO,1,0.1,True,11/20,,True,0.1
 25,5691ee9e25c111ebabb53800255995ba,SammySnipes,standard,QQQ,1,-2.69,True,11/20,,True,-20.1
-26,5f6352e625c311ebb9d73800255995ba,emraht,standard,NIO,1,0.1,True,12/04,,False,
+26,5f6352e625c311ebb9d73800255995ba,emraht,standard,NIO,1,0.1,True,12/04,,True,0.0
 27,7cd3a49225c511ebac473800255995ba,Taaka,standard,NIO,1,0.1,True,11/20,,True,0.1
 28,e70811f425c611eb96d73800255995ba,emraht,standard,NIO,1,0.1,True,11/27,,True,0.1
-29,d862336c25c711eb8d073800255995ba,emraht,standard,NIO,1,-4.7,True,12/04,5.85,False,
+29,d862336c25c711eb8d073800255995ba,emraht,standard,NIO,1,-4.7,True,12/04,5.85,True,-20.0
 30,ec50b0d825c711ebb3d63800255995ba,emraht,standard,NIO,1,-5.4,True,11/27,5.85,True,-80.56
 31,4302a21e25ca11ebb6ed3800255995ba,raj_alert,standard,PLTR,1,-0.5,True,12/18,,True,30.1
 32,d109033525d111eb9b643800255995ba,SammySnipes,standard,WMT,1,-2.89,True,11/20,,True,-88.93
@@ -70,7 +70,7 @@
 68,390cc1a328e311ebb9cc3800255995ba,Eddy_Trades,standard,TSLA,1,-7.35,True,11/20,7.8,True,-55.1
 69,4a0119f028e311eba56a3800255995ba,JD,standard,TSLA,1,-12.45,True,12/18,12.65,True,-24.9
 70,73e1c40f28e311eb82683800255995ba,russellnoonan,standard,TSLA,1,-7.8,True,11/27,6.5,True,154.49
-71,cdcb7e0528e311eb80433800255995ba,Visvim,standard,TSLA,1,0.1,True,20/11,8.7,True,
+71,cdcb7e0528e311eb80433800255995ba,Visvim,standard,TSLA,1,0.1,True,20/11,8.7,True,0.1
 72,ea15f9c228e311eb90743800255995ba,Eddy_Trades,standard,TSLA,1,-12.65,True,11/20,12.0,True,-60.87
 73,59f79e5e28e511eb967d3800255995ba,Hugh Jassol,standard,NET,1,-0.85,True,11/27,0.8,True,58.82
 74,1434705128e611eb9fe93800255995ba,JD,standard,NET,1,-0.85,True,11/27,0.85,True,52.94
@@ -168,7 +168,7 @@
 166,7ba36a552a9111eb96b53800255995ba,cMoney💰,standard,SPCE,1,-0.56,True,11/20,,True,12.5
 167,58dc403a2a9211ebac1d3800255995ba,emraht,standard,FCEL,1,-1.23,True,12/18,1.23,False,
 168,0bc5d47f2a9911ebaf383800255995ba,Rich,standard,PTON,1,-2.69,True,12/4,2.62,True,30.11
-169,3e24dfa42a9911eb83993800255995ba,emraht,standard,AMD,1,-1.35,True,12/04,1.36,False,
+169,3e24dfa42a9911eb83993800255995ba,emraht,standard,AMD,1,-1.35,True,12/04,1.36,True,199.26
 170,4d9ddbdd2a9911eba6423800255995ba,Reventing,standard,AMZN,1,-4.6,True,11/27,,True,1.09
 171,918899252a9a11eb8c4f3800255995ba,cMoney💰,standard,WBA,1,-0.39,True,12/04,,True,15.38
 172,9d19b1b92a9d11eba8793800255995ba,Doktar Evil,standard,BABA,1,-3.1,True,11/27,0.3,True,0.1
@@ -177,16 +177,16 @@
 175,53145d382aa411eba75a3800255995ba,TacoTradez🌮,standard,NET,1,-2.1,True,11/27,,True,40.48
 176,d357cb362aa611eb85cf3800255995ba,Visvim,standard,SHOP,1,0.1,True,11/27,11.65,True,0.1
 177,b9072f312aa711eb86be3800255995ba,Visvim,standard,SHOP,1,-12.4,True,11/27,11.65,True,38.71
-178,e2579b6c2aa711eb956c3800255995ba,emraht,standard,NIO,1,-4.35,True,12/04,4.5,False,
+178,e2579b6c2aa711eb956c3800255995ba,emraht,standard,NIO,1,-4.35,True,12/04,4.5,True,-20.0
 179,7bd870292aa811ebabc13800255995ba,therealyoungari,standard,QQQ,1,-0.34,True,11/20,0.35,True,-88.24
 180,e38276ec2aa911ebbf163800255995ba,therealyoungari,standard,AMD,1,0.1,True,11/27,1.73,True,0.1
 181,cd72226d2b3f11ebb3443800255995ba,manprit123,standard,SPCE,1,-1.05,True,11/27,,True,-32.38
 182,da5ad64b2b3f11eba7733800255995ba,SammySnipes,standard,AMZN,1,-8.55,True,03/19/21,,False,
 183,08be86512b4011ebbe1f3800255995ba,TacoTradez🌮,standard,NVCR,1,-96.5,True,12/18,,True,0.1
-184,18167f7b2b4011eb84193800255995ba,TacoTradez🌮,standard,NVCR,1,-5.4,True,12/18,,False,
-185,227b40042b4011eb9fb83800255995ba,zoom,standard,MSFT,1,0.1,True,12/4,,False,
-186,924594242b4311eb81303800255995ba,zoom,standard,BYND,1,-6.35,True,12/4,,False,
-187,efd46efb2b4311ebad413800255995ba,zoom,standard,MSFT,1,-5.35,True,12/4,,False,
+184,18167f7b2b4011eb84193800255995ba,TacoTradez🌮,standard,NVCR,1,-5.4,True,12/18,,True,-51.85
+185,227b40042b4011eb9fb83800255995ba,zoom,standard,MSFT,1,0.1,True,12/4,,True,0.0
+186,924594242b4311eb81303800255995ba,zoom,standard,BYND,1,-6.35,True,12/4,,True,-42.99
+187,efd46efb2b4311ebad413800255995ba,zoom,standard,MSFT,1,-5.35,True,12/4,,True,-18.5
 188,b63c99e42b4411eb93c93800255995ba,Visvim,standard,SPY,1,-1.69,True,11/27,1.68,True,2.37
 189,1170fa142b4b11eba5fd3800255995ba,TacoTradez🌮,standard,ZM,1,-9.2,True,11/27,,True,-61.96
 190,3fe5384d2b4e11eb9c323800255995ba,therealyoungari,standard,AMD,1,-1.24,True,11/27,1.25,True,16.94
@@ -197,7 +197,7 @@
 195,6083a6fd2b5211ebad533800255995ba,Doktar Evil,standard,PTON,1,-2.16,True,11/27,2.05,True,29.63
 196,65b0ba302b5211eb9bd83800255995ba,Rich,standard,BBY,1,-2.98,True,12/4,2.85,True,-7.05
 197,720bdcb52b5211eb809d3800255995ba,SilverSurfie,standard,SPCE,1,-1.04,True,12/18,1.0,True,5.77
-198,24f384112b5411ebb7853800255995ba,Nardo9999,standard,SPCE,1,0.1,True,12/04,1.38,True,
+198,24f384112b5411ebb7853800255995ba,Nardo9999,standard,SPCE,1,0.1,True,12/04,1.38,True,0.01
 199,7347c0432b5e11eb83f43800255995ba,Engine Trades,standard,TWTR,1,-1.45,True,12/04,1.26,True,-11.03
 200,43223ecd2b6311ebba933800255995ba,Eddy_Trades,standard,SHOP,1,-3.9,True,11/27,3.35,True,21.03
 201,57791e5e2b6511eba9f93800255995ba,SilverSurfie,standard,TWTR,1,-1.11,True,12/18,1.12,True,-12.61
@@ -205,30 +205,30 @@
 203,ffe8caa42b6b11eb96f03800255995ba,JD,standard,AAL,1,-0.17,True,11/27,0.17,True,1314.43
 204,58836c642b6d11eb9d2a3800255995ba,TacoTradez🌮,standard,TWTR,1,-0.75,True,12/18,,True,-24.0
 205,c9d41f6e2b6e11eb970a3800255995ba,SilverSurfie,standard,BABA,1,-1.47,True,12/18,1.47,True,10.2
-206,ae97b2d02d9811ebb14e3800255995ba,SammySnipes,standard,AMD,1,-1.18,True,12/4,,False,
+206,ae97b2d02d9811ebb14e3800255995ba,SammySnipes,standard,AMD,1,-1.18,True,12/4,,True,242.37
 207,ef4b05bd2d9811ebae143800255995ba,SilverSurfie,standard,AMD,1,-0.67,True,12/18,1.14,True,-4.48
 208,4e1664e12d9911eb9c2b3800255995ba,SilverSurfie,standard,AMD,1,-1.12,True,12/4,1.14,True,38.39
-209,80ffb1942d9911eb96293800255995ba,TacoTradez🌮,standard,TTD,1,-13.1,True,12/4,,False,
+209,80ffb1942d9911eb96293800255995ba,TacoTradez🌮,standard,TTD,1,-13.1,True,12/4,,True,-79.01
 210,8bff48fc2d9911eb94e63800255995ba,TacoTradez🌮,standard,AMD,1,-1.16,True,12/4,,True,29.31
 211,95a713742d9911ebbab23800255995ba,Reventing,standard,SPCE,1,-1.15,True,12/4,,True,6.09
-212,c235d20d2d9911ebb7bf3800255995ba,TacoTradez🌮,standard,NET,1,-1.75,True,12/4,,False,
+212,c235d20d2d9911ebb7bf3800255995ba,TacoTradez🌮,standard,NET,1,-1.75,True,12/4,,True,40.0
 213,e168ea4e2d9911eb869f3800255995ba,SilverSurfie,standard,RIOT,1,-0.75,True,12/4,0.72,True,13.33
-214,16afe5972d9c11eb91a33800255995ba,Visvim,standard,BABA,1,0.1,True,12/4,2.15,False,
+214,16afe5972d9c11eb91a33800255995ba,Visvim,standard,BABA,1,0.1,True,12/4,2.15,True,0.0
 215,21a73ef92d9c11eb80623800255995ba,cMoney💰,standard,TSLA,1,-14.8,True,11/27,,True,0.1
 216,21f054e42d9d11ebb7b43800255995ba,Engine Trades,standard,SPCE,1,-1.2,True,12/18,1.2,True,16.67
 217,783a0b652d9d11eb821f3800255995ba,SilverSurfie,standard,SPCE,1,-1.22,True,12/18,1.2,True,8.2
 218,d70d424d2d9d11eba49f3800255995ba,TacoTradez🌮,standard,TSLA,1,-13.65,True,12/4,,True,29.3
-219,4bc805622da611ebb10c3800255995ba,SammySnipes,standard,NVDA,1,-5.3,True,12/4,,False,
+219,4bc805622da611ebb10c3800255995ba,SammySnipes,standard,NVDA,1,-5.3,True,12/4,,True,-20.0
 220,eda246f02da711eb95053800255995ba,raj_alert,standard,SQ,1,-5.1,True,1/15/21/21,,True,34.31
 221,275a5daf2db011eb9ccf3800255995ba,Rich,standard,LULU,1,-3.1,True,12/4,2.95,True,-35.48
-222,cc65b5d02db111eb8ce33800255995ba,TacoTradez🌮,standard,AMD,1,-1.12,True,12/4,,False,
+222,cc65b5d02db111eb8ce33800255995ba,TacoTradez🌮,standard,AMD,1,-1.12,True,12/4,,True,386.61
 223,a8c44c1c2db211eb98f73800255995ba,manprit123,standard,SPCE,1,-0.95,True,12/4,,False,
 224,62160c052db711ebb7bb3800255995ba,SilverSurfie,standard,SONO,1,-0.95,True,01/15/21,0.94,True,52.63
-225,4e63381c2db911eba6bd3800255995ba,Visvim,standard,OSTK,1,-3.5,True,12/4,3.4,False,
-226,3174e89c2dc611eb9d403800255995ba,SammySnipes,standard,WMT,1,-0.77,True,12/4,,False,
+225,4e63381c2db911eba6bd3800255995ba,Visvim,standard,OSTK,1,-3.5,True,12/4,3.4,True,0.0
+226,3174e89c2dc611eb9d403800255995ba,SammySnipes,standard,WMT,1,-0.77,True,12/4,,True,-20.0
 227,3e5e819d2dc611ebabc43800255995ba,TacoTradez🌮,standard,DKNG,1,-1.7,True,12/4,,True,123.53
-228,6a6089fd2e6311eb80de3800255995ba,SilverSurfie,standard,BABA,1,-1.2,True,12/18,1.15,False,
-229,56e2e5be2e6411eb866e3800255995ba,Engine Trades,standard,AAPL,1,0.1,True,1/21/21,2.7,True,
+228,6a6089fd2e6311eb80de3800255995ba,SilverSurfie,standard,BABA,1,-1.2,True,12/18,1.15,True,-55.0
+229,56e2e5be2e6411eb866e3800255995ba,Engine Trades,standard,AAPL,1,0.1,True,1/21/21,2.7,True,0.01
 230,50cedaa72e6511ebabd03800255995ba,SilverSurfie,standard,APPS,1,-1.35,True,12/18,1.25,True,74.07
 231,688a27542e6511ebb58a3800255995ba,SilverSurfie,standard,AAPL,1,-1.63,True,1/15/21,1.58,True,41.72
 232,f60c56de2e6511eb9cea3800255995ba,cMoney💰,standard,SPCE,1,-0.72,True,11/27,0.66,True,6.94
@@ -267,13 +267,13 @@
 265,421dc8a030bf11ebb7223800255995ba,TacoTradez🌮,standard,DKNG,1,-1.85,True,12/11,,True,13.51
 266,1aa2f08a30c011ebb9a63800255995ba,cMoney💰,standard,SPY,1,-0.57,True,11/27,,True,28.07
 267,2125568330c111eb86be3800255995ba,Reventing,standard,DKNG,1,-2.05,True,12/4,,True,4.88
-268,1eac1d0a30c611ebbe273800255995ba,Rich,standard,SNAP,1,-2.26,True,1/15/21,,False,
+268,1eac1d0a30c611ebbe273800255995ba,Rich,standard,SNAP,1,-2.26,True,1/15/21,,True,43.81
 269,be2b95dc30cc11eb83d43800255995ba,zoom,standard,BBY,1,-2.92,True,12/18,,False,
 270,bd2c166230cd11ebb3043800255995ba,Samer91🧐,standard,KR,1,-0.38,True,12/4,,True,21.05
 271,bcf5069b331811eb9b093800255995ba,Charlie678,standard,AMD,1,-8.1,True,12/4,,True,127.16
-272,123764db331911ebbb603800255995ba,Eddy_Trades,standard,AMZN,1,0.1,True,11/4/21,20.5,True,
+272,123764db331911ebbb603800255995ba,Eddy_Trades,standard,AMZN,1,0.1,True,11/4/21,20.5,True,0.01
 273,a039a5c9331911eb89af3800255995ba,cMoney💰,standard,TLRY,1,-0.84,True,12/04,,True,2.38
-274,ba08464a331911eb98d53800255995ba,Eddy_Trades,standard,CRWD,1,0.1,True,11/04/21,2.84,True,
+274,ba08464a331911eb98d53800255995ba,Eddy_Trades,standard,CRWD,1,0.1,True,11/04/21,2.84,True,0.01
 275,d8ee481d331a11eb85e93800255995ba,SammySnipes,standard,SPOT,1,-4.5,True,12/18,,False,
 276,22dd7651331d11ebb5cc3800255995ba,SilverSurfie,standard,JKS,1,-1.2,True,12/18,1.15,True,-33.33
 277,522cdbfe331d11eba3cc3800255995ba,SammySnipes,standard,EA,1,-1.09,True,12/11,,False,
@@ -281,12 +281,12 @@
 279,e8ced53a332511eb8d1c3800255995ba,SilverSurfie,standard,JD,1,-1.62,True,12/18,1.61,True,15.43
 280,baaaf658332611eba3553800255995ba,cMoney💰,standard,ACB,1,-1.06,True,12/04,,True,16.04
 281,ba4f94c1332911ebbdd83800255995ba,SilverSurfie,standard,AMD,1,-1.34,True,12/18,0.8,True,23.88
-282,1d15a6ea333011eb82663800255995ba,SilverSurfie,standard,TLRY,1,-1.01,True,1/15/21,1.05,False,
+282,1d15a6ea333011eb82663800255995ba,SilverSurfie,standard,TLRY,1,-1.01,True,1/15/21,1.05,True,-27.72
 283,1ef61f9d333511ebb8883800255995ba,cMoney💰,standard,AMD,1,-2.55,True,12/04,,True,2.35
-284,dda159f4333711ebb9b53800255995ba,SilverSurfie,standard,CGC,1,-0.89,True,1/15/21,0.87,False,
+284,dda159f4333711ebb9b53800255995ba,SilverSurfie,standard,CGC,1,-0.89,True,1/15/21,0.87,True,-25.84
 285,860502c2333811eb8f6c3800255995ba,Chuck,standard,CRSR,1,0.1,True,1/15/21,3.82,True,0.1
 286,1baf1b87334311eba04a3800255995ba,Rich,standard,FB,1,-1.71,True,12/18,,True,52.63
-287,ea4837ef334611eb957d3800255995ba,Rich,standard,Z,1,-1.43,True,12/18,,False,
+287,ea4837ef334611eb957d3800255995ba,Rich,standard,Z,1,-1.43,True,12/18,,True,-30.77
 288,aa2daa87334d11ebaecc3800255995ba,SammySnipes,standard,NFLX,1,-5.5,True,12/18,,False,
 289,14cbd0f933e211eba70d3800255995ba,cMoney💰,standard,BB,1,-0.74,True,12/04,,True,16.22
 290,2e9ccded33e211eb94293800255995ba,SilverSurfie,standard,LI,1,-1.43,True,12/18,1.48,True,-17.48
@@ -294,20 +294,87 @@
 292,1bb2059433e411ebbaad3800255995ba,Engine Trades,standard,SPCE,1,-0.89,True,12/11,0.88,True,23.6
 293,a56f40fd33e411ebb5013800255995ba,SilverSurfie,standard,SPCE,1,-1.66,True,12/18,1.65,True,14.46
 294,f526471f33e411ebadc83800255995ba,cMoney💰,standard,JNJ,1,-3.3,True,01/15/21,,True,24.24
-295,7e2a8d1d33e511eb92a63800255995ba,riceboy26,standard,CHWY,1,-0.26,True,12/04,,False,
-296,fd44b8bb33e711eb8f613800255995ba,TacoTradez🌮,standard,AMD,1,-3.1,True,12/11,,False,
-297,9b02bcf433e911eba36d3800255995ba,cMoney💰,standard,ACB,1,-1.02,True,12/04,,False,
+295,7e2a8d1d33e511eb92a63800255995ba,riceboy26,standard,CHWY,1,-0.26,True,12/04,,True,-20.0
+296,fd44b8bb33e711eb8f613800255995ba,TacoTradez🌮,standard,AMD,1,-3.1,True,12/11,,True,48.39
+297,9b02bcf433e911eba36d3800255995ba,cMoney💰,standard,ACB,1,-1.02,True,12/04,,True,-50.0
 298,45efc8bf33ea11eb8b8a3800255995ba,SammySnipes,standard,SPY,1,-2.03,True,12/11,,False,
-299,50c8b1e433ec11ebacb43800255995ba,Rich,standard,WMT,1,-0.64,True,12/18,,False,
+299,50c8b1e433ec11ebacb43800255995ba,Rich,standard,WMT,1,-0.64,True,12/18,,True,-60.94
 300,6697358833ec11ebaa673800255995ba,cMoney💰,standard,NIO,1,-3.2,True,12/11,,False,
 301,922100f833ec11ebb80c3800255995ba,dahonam,standard,MU,1,-1.1,True,12/4,,True,7.27
 302,060c35d733ed11eb869b3800255995ba,Eddy_Trades,standard,SPCE,1,-0.45,True,12/4,0.43,True,64.44
-303,7f60db9333ed11eb828c3800255995ba,Eddy_Trades,standard,BA,1,-3.55,True,12/4,3.35,False,
-304,7518b4a833f011eba08c3800255995ba,SilverSurfie,standard,APPS,1,-1.55,True,12/18,1.5,False,
+303,7f60db9333ed11eb828c3800255995ba,Eddy_Trades,standard,BA,1,-3.55,True,12/4,3.35,True,26.76
+304,7518b4a833f011eba08c3800255995ba,SilverSurfie,standard,APPS,1,-1.55,True,12/18,1.5,True,-41.94
 305,f5b53c7833f911ebbb003800255995ba,Eddy_Trades,standard,CGC,1,-0.92,True,12/11,0.91,True,-18.48
 306,f965993a33f911eba7c43800255995ba,SammySnipes,standard,MSFT,1,0.1,True,12/18,,False,
 307,07b0251833fa11ebba393800255995ba,Rich,standard,MSFT,1,-1.97,True,12/11,,True,34.01
 308,090eea2f33fb11ebb6473800255995ba,SilverSurfie,standard,MSFT,1,-1.65,True,12/18,1.64,True,24.24
 309,ffe4236b340011eba9943800255995ba,cMoney💰,standard,RIDE,1,-1.66,True,12/11,,False,
-310,9ff7c034341111eb87453800255995ba,SilverSurfie,standard,MSFT,1,-0.99,True,12/18,0.99,False,
-311,1a82a5dd341811eb98533800255995ba,Dick Branson,standard,TLRY,1,-0.6,True,12/18,,False,
+310,9ff7c034341111eb87453800255995ba,SilverSurfie,standard,MSFT,1,-0.99,True,12/18,0.99,True,-40.4
+311,1a82a5dd341811eb98533800255995ba,Dick Branson,standard,TLRY,1,-0.6,True,12/18,,True,41.67
+312,8d86465634ab11ebb76c3800255995ba,Eddy_Trades,standard,CGC,1,-0.64,True,12/4,0.55,True,7.81
+313,addb73b634ad11eb95173800255995ba,Dick Branson,standard,SPCE,1,-1.4,True,12/18,,True,28.57
+314,2c312c7834ae11ebac5e3800255995ba,Eddy_Trades,standard,BA,1,0.0,True,11/4/21,1.32,True,0.01
+315,9db2d6bc34ae11ebb4863800255995ba,Engine Trades,standard,FB,1,-3.55,True,12/11,3.35,True,1.41
+316,ea70229534ae11ebb6b23800255995ba,SilverSurfie,standard,FB,1,-1.43,True,12/11,1.42,True,134.27
+317,1b801f2e34af11ebab1f3800255995ba,SammySnipes,standard,BBY,1,-2.53,True,12/18,,False,
+318,b382650734b011eb86a93800255995ba,Engine Trades,standard,FB,1,-2.91,True,12/18,2.87,True,71.82
+319,b0f08e2c34b311eb9b473800255995ba,Engine Trades,standard,LYFT,1,-0.99,True,12/11,0.98,True,26.26
+320,bdd7435034b511ebaf703800255995ba,dahonam,standard,MU,1,-1.4,True,12/11,,True,5.71
+321,bfbe03ef34b511ebb5113800255995ba,cMoney💰,standard,AAL,1,-0.28,True,12/04,,True,71.43
+322,34de704e34b711eb88cb3800255995ba,Eddy_Trades,standard,SPCE,1,-0.98,True,12/11,0.93,True,34.69
+323,082775c934bb11eb986f3800255995ba,cMoney💰,standard,BP,1,-0.15,True,12/04,,True,13.33
+324,8d88d15734bd11eb93c73800255995ba,Rich,standard,AMZN,1,-5.85,True,12/11,,True,-32.48
+325,b68d7f2c34c611eba76a3800255995ba,zoom,standard,BA,1,-5.1,True,12/11,,False,
+326,d166af4e34c911eb8ee73800255995ba,Taaka 2,standard,SNOW,1,-0.9,True,12/04,,True,-77.78
+327,ac7ad03534ce11eb8cdd3800255995ba,Eddy_Trades,standard,CGC,1,-0.47,True,12/4,0.69,True,-2.13
+328,f0e2056e34ce11eba4483800255995ba,Eddy_Trades,standard,BA,1,-6.0,True,01/8/21/21,5.75,True,78.33
+329,d0883d0334cf11eb9e473800255995ba,therealyoungari,standard,AMD,1,-1.03,True,12/11,1.04,False,
+330,d7a1f81234cf11eb9e503800255995ba,SilverSurfie,standard,SPCE,1,-1.68,True,12/18,1.67,True,13.69
+331,e37ba6e434cf11eb84963800255995ba,therealyoungari,standard,PFE,1,-0.74,True,12/18,0.8,True,-50.0
+332,501913d734d111eba38e3800255995ba,Engine Trades,standard,SPCE,1,-1.77,True,12/18,1.77,True,-4.52
+333,3165fb0f34d411eb913f3800255995ba,Eddy_Trades,standard,AAL,1,-0.2,True,12/4,0.19,True,35.0
+334,a2c5882234d511ebb5a03800255995ba,Rich,standard,SQ,1,-2.58,True,12/11,,True,55.04
+335,80b1af2f34db11eb93823800255995ba,TacoTradez🌮,standard,TSLA,1,-15.8,True,12/11,,True,44.3
+336,dd7e827734dd11ebb0b13800255995ba,ED,standard,TSLA,1,-0.99,True,12/11,0.94,False,
+337,a68cb390357411eb87ef3800255995ba,SammySnipes,standard,AMZN,1,-7.75,True,12/11,,False,
+338,79eb2287357511ebb3e83800255995ba,Engine Trades,standard,SBUX,1,-1.39,True,12/11,1.37,True,29.5
+339,c8b49d0f357511eb869c3800255995ba,SilverSurfie,standard,SBUX,1,-1.4,True,12/11,1.39,True,27.14
+340,4134db5a357611eb88513800255995ba,TacoTradez🌮,standard,AMD,1,-2.27,True,12/11,,False,
+341,c228f98b357911eb90a93800255995ba,therealyoungari,standard,AAL,1,-0.66,True,12/11,,True,25.76
+342,b53d4645357b11eba7be3800255995ba,Eddy_Trades,standard,AMD,1,-0.96,True,12/11,0.97,True,-20.83
+343,c94f0547358011eb9c723800255995ba,Engine Trades,standard,KO,1,-0.49,True,12/11,0.46,True,14.29
+344,6f07759c358711ebb0563800255995ba,Taaka 2,standard,BABA,1,-1.08,True,12/18,,False,
+345,e8daa0bc358711ebaaa93800255995ba,🔥💰𝒲𝒾𝓁𝒹 𝒲𝒾𝓁𝓁𝓎💰🔥,standard,AMZN,1,-6.05,True,12/11,,True,-2.48
+346,14a4c965358811eba7093800255995ba,Rich,standard,HD,1,-1.85,True,12/11,,True,27.57
+347,3c9eda85358811eb894b3800255995ba,SilverSurfie,standard,SNAP,1,-1.06,True,12/11,1.09,True,5.66
+348,63d0630b358811eb9dcc3800255995ba,dahonam,standard,SNAP,1,-1.95,True,12/11,,True,-4.1
+349,4577cbbb359311eb844a3800255995ba,Engine Trades,standard,VXX,1,-0.85,True,12/18,0.85,False,
+350,6324ac6e359611ebba943800255995ba,SilverSurfie,standard,VXX,1,-0.87,True,12/18,0.86,False,
+351,8168dbf0359b11ebb79a3800255995ba,Taaka 2,standard,PLTR,1,-1.27,True,12/4,,True,15.75
+352,0d387ca235a211ebb2823800255995ba,Taaka 2,standard,AAPL,1,-1.33,True,12/11,,False,
+353,c7bc067835a211ebafae3800255995ba,Dick Branson,standard,FB,1,-1.25,True,12/11,,True,21.6
+354,541e54aa35a411ebae453800255995ba,Taaka 2,standard,ACB,1,-0.47,True,12/04,,True,-21.28
+355,bdfaf40835a911ebb7f53800255995ba,Taaka 2,standard,PFE,1,-0.12,True,12/04,,True,-91.67
+356,1cf29b4635aa11eba2ce3800255995ba,cMoney💰,standard,FPRX,1,-0.65,True,12/18,,False,
+357,6ee55ed8363d11eba6a83800255995ba,TacoTradez🌮,standard,BA,1,-0.91,True,12/4,,True,20.88
+358,9292e7e3363e11ebb6573800255995ba,SilverSurfie,standard,BABA,1,-1.47,True,12/24,1.45,False,
+359,851e80c0363f11ebbced3800255995ba,Rich,standard,HOME,1,-0.85,True,12/18,,False,
+360,cc63b09e363f11eb93193800255995ba,Dick Branson,standard,SPCE,1,-1.32,True,12/18,,True,9.85
+361,6ad36f79364011eb8b863800255995ba,Engine Trades,standard,SFIX,1,-2.94,True,12/18,2.77,False,
+362,db31acf8364211eb98523800255995ba,SilverSurfie,standard,PLUG,1,-1.78,True,12/18,1.75,True,-15.73
+363,fd89e3cc364211ebb7d73800255995ba,cMoney💰,standard,FCEL,1,-0.97,True,12/18,,True,13.4
+364,331d33e8364311eba6b53800255995ba,Chuck,standard,PLUG,1,-1.75,True,12/18,1.74,False,
+365,ee6e1dfc364311ebac443800255995ba,Taaka 2,standard,NIO,1,-0.98,True,12/11,,False,
+366,c8b12e83364711ebb7c53800255995ba,Taaka 2,standard,PTON,1,-0.7,True,12/04,,True,31.43
+367,70a93b54364b11eb8e183800255995ba,Taaka 2,standard,XPEV,1,-2.97,True,12/11,,True,19.53
+368,80afb463364c11ebbc373800255995ba,Eddy_Trades,standard,ULTA,1,-4.6,True,12/31,,False,
+369,81235f48364f11ebae8d3800255995ba,Eddy_Trades,standard,AMD,1,-0.86,True,12/11,0.78,False,
+370,d8aba4e7364f11eb9e763800255995ba,Adam B,creditspread,SNOW,2,-3.8,True,12/31,2.61,False,
+371,98b7f33e365011eb9a113800255995ba,Taaka 2,standard,SPY,1,-1.38,True,12/07,,True,11.59
+372,ca20b47a365611eb87d93800255995ba,therealyoungari,standard,JNJ,1,-1.22,True,2/19/21,0.82,False,
+373,a2d106d5365d11eba3793800255995ba,Taaka 2,standard,SNOW,1,-21.0,True,12/11,,False,
+374,661ff4fc365e11ebbf843800255995ba,Dick Branson,standard,SPCE,1,-1.16,True,12/18,,True,11.21
+375,7f264afc366111ebb1413800255995ba,Rich,standard,AMD,1,-1.75,True,12/18,,False,
+376,41f850fa366a11ebbad63800255995ba,Rich,standard,MCD,1,-0.43,True,12/18,,False,
+377,1a26e52e367111eb85653800255995ba,Dick Branson,standard,NIO,1,-1.11,True,12/18,,False,
+378,d2e9736c367111eb842f3800255995ba,SilverSurfie,standard,APPS,1,-0.9,True,12/18,0.6,True,0.0
