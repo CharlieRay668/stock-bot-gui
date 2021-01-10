@@ -13,7 +13,7 @@ import chain_proccessor as cp
 from PIL import Image
 from Watchlist import Watch
 import numpy as np
-import command_handler as ch
+import new_command_handler as ch
 from account_handler import AccountHandler
 import math
 import locale
@@ -277,6 +277,15 @@ async def watchlist(ctx, *, args):
         pass
 
 @client.command()
+async def alltimeprofit(ctx):
+    trades = pd.read_csv('trades_db.csv', index_col=0)
+    total = 0
+    for profit in trades['PROFIT']:
+        if not math.isnan(profit):
+            total += float(profit)
+    await ctx.channel.send(total)
+
+@client.command()
 async def close_expirations(ctx):
     server_main = client.get_guild(UTOPIA)
     trades = pd.read_csv('trades_db.csv', index_col=0)
@@ -297,7 +306,7 @@ async def close_expirations(ctx):
                 else:
                     date_str ='/'.join(date)+'/20'
                     time =dt.datetime.strptime(date_str,'%m/%d/%y')
-                if time < dt.datetime.now():
+                if time < dt.datetime.now() and time > dt.datetime.now() - dt.timedelta(weeks=2):
                     trade_id = row['ID']
                     pos = positions[positions['id'] == trade_id]
                     num = 0
@@ -316,8 +325,7 @@ async def close_expirations(ctx):
                     send_str += 'If your position expired ITM, the bot will recognize that and calculate profit accordingly\n'
                     send_str += 'If your position expired OTM, the bot will determine if there was an error closing the position or if the position was never closed\n'
                     send_str += 'If the bot determined there was an error when closing the position you will not receive any penalty to your leaderboard ranking\n'
-                    send_str += 'If the bot determined that the position was simply forgotten about, there will be a -20% penalty to give grace and simulate proper risk management\n'
-                    send_str += 'Going forward, ANY position that expired OTM will count as a -100% penalty, make sure to close out your positions in the future.\n'
+                    send_str += 'Any position that has expired OTM will count as -100% penalty.\n'
                     for trade in trader_dict[key]:
                         if len(trade) > 1:
                             profit = 0
@@ -343,8 +351,8 @@ async def close_expirations(ctx):
                                     profit += round((float(intrinsic_value/abs(float(price)))-1)*100,2)
                                     send_str += '**' + ticker + ' ' + str(strike) + ' ' + str(side) + ' ' + str(date) + ' expired ITM reciving ' + str(round((float(intrinsic_value/abs(float(price)))-1)*100,2)) + '% ' + 'Calculated profit**\n'
                                 else:
-                                    profit += -20
-                                    send_str += '**' + ticker + ' ' + str(strike) + ' ' + str(side) + ' ' + str(date) + ' expired OTM reciving ' + '-20' + '% ' + 'Penalty**\n'
+                                    profit += -100
+                                    send_str += '**' + ticker + ' ' + str(strike) + ' ' + str(side) + ' ' + str(date) + ' expired OTM reciving ' + '-100' + '% ' + 'Penalty**\n'
                         else:
                             pos = trade[0]
                             ticker = pos.split(' ')[0]
@@ -368,14 +376,10 @@ async def close_expirations(ctx):
                                 send_str += '**' + ticker + ' ' + str(strike) + ' ' + str(side) + ' ' + str(date) + ' expired ERROR reciving ' + str(profit) + '% ' + ' (No penalty)**\n'
                             elif intrinsic_value > 0:
                                 profit = round((float(intrinsic_value/abs(float(price)))-1)*100,2)
-                                send_str += '**' + ticker + ' ' + str(strike) + ' ' + str(side) + ' ' + str(date) + ' expired ITM reciving ' + str(profit) + '% ' + 'Calculated profit**\n'
+                                send_str += '**' + ticker + ' ' + str(strike) + ' ' + str(side) + ' ' + str(date) + ' expired ITM reciving ' + str(profit) + '% ' + '(Calculated profit)**\n'
                             else:
-                                if member.name != 'Eddy_Trades💸⭕🖨' and member.name != 'Visvim':
-                                    profit = -20
-                                    send_str += '**' + ticker + ' ' + str(strike) + ' ' + str(side) + ' ' + str(date) + ' expired OTM reciving ' + str(profit) + '% ' + 'Penalty**\n'
-                                else:
-                                    profit = 0
-                                    send_str += '**' + ticker + ' ' + str(strike) + ' ' + str(side) + ' ' + str(date) + ' expired ERROR reciving ' + str(profit) + '% ' + ' (No penalty)**\n' 
+                                profit = -100
+                                send_str += '**' + ticker + ' ' + str(strike) + ' ' + str(side) + ' ' + str(date) + ' expired OTM reciving ' + str(profit) + '% ' + ' (Penalty)**\n' 
                         for index in trades.index:
                             if trades.loc[index,'ID']==trade_id:
                                 trades.loc[index, 'CLOSED'] = True
@@ -405,7 +409,8 @@ async def close_expirations(ctx):
                         position_db = position_db.append(new_positions_df, ignore_index = True)
                         position_db.to_csv('positions_db.csv')
                     print(member.name)
-                    await member.send(send_str)
+                    if member.name != 'SammySnipes':
+                        await member.send(send_str)
 
 @client.command()
 async def record(ctx, *, params):
@@ -421,46 +426,95 @@ async def record(ctx, *, params):
         print(type(param))
 
 def calc_leaderboard():
-    trades_db = pd.read_csv('trades_db.csv')
-    positions_db = pd.read_csv('positions_db.csv')
-    member_profits = {}
-    for index, row in trades_db.iterrows():
-        trade_id = row['ID']
-        linked_positions = positions_db[positions_db['id'] == trade_id]
-        sum_closed = 0
-        for index, pos_row in linked_positions.iterrows():
-            if pos_row['closing']:
-                sum_closed += 1
-        if sum_closed >= len(linked_positions)/2:
-            for index, pos_row in linked_positions.iterrows():
-                if pos_row['closing']:
-                    if not dt.datetime.strptime(pos_row['time'].split(' ')[0], '%Y-%m-%d').month < dt.datetime.now().month:                  
-                        if not (row['TRADER'] == 'SammySnipes' or row['TRADER']  == 'MoneyMan' or row['TRADER']  == 'Engine Trades' or row['TRADER'] == 'TacoTradez🌮'):
-                            if not pd.isnull(row['PROFIT']):
-                                if row['TRADER'] in member_profits.keys():
-                                    if row['PROFIT'] > 0:
-                                        member_profits[row['TRADER']] = (member_profits[row['TRADER']][0] + row['PROFIT'], member_profits[row['TRADER']][1] + 1, member_profits[row['TRADER']][2])
-                                    else:
-                                        member_profits[row['TRADER']] = (member_profits[row['TRADER']][0] + row['PROFIT'], member_profits[row['TRADER']][1], member_profits[row['TRADER']][2] + 1)
-                                else:
-                                    if row['PROFIT'] >= -0.1:
-                                        member_profits[row['TRADER']] = (row['PROFIT'], 1, 0)
-                                    else:
-                                        member_profits[row['TRADER']] = (row['PROFIT'], 0, 1)
+    member_names = [member.name for member in client.get_guild(UTOPIA).members]
     leaderboard = []
-    for key in member_profits.keys():
-        profit = round(member_profits[key][0],2)
-        win = member_profits[key][1]
-        loss = member_profits[key][2]
-        if loss == 0:
-            score = (profit/100)
-        else:
-            score = (profit/100) * (win/(loss+win))
-        score += (win*0.7)
-        score -= (loss*0.7)
-        leaderboard.append((round(score*10,2), key))
+    for name in member_names:
+        positions_db = pd.read_csv('new_positions.csv', index_col=0)
+        individual_trades = positions_db[positions_db['trader'] == name]
+        if len(individual_trades) > 1:
+            descriptions = []
+            for index, row in individual_trades.iterrows():
+                descriptions.append(row['description'])
+            descriptions = list(set(descriptions))
+            all_positions = []
+            profit = 0
+            wins = 0
+            losses = 0
+            for description in descriptions:
+                curr_quantity = 0
+                exact_positions = individual_trades[individual_trades['description'] == description]
+                if len(exact_positions) > 1:
+                    total_qty = 0
+                    curr_profit = 0
+                    total_neg = 0
+                    total_pos = 0
+                    for index, exact in exact_positions.iterrows():
+                        if exact['quantity'] > 0:
+                            dollar_amt = exact['trade_price']*abs(exact['quantity'])*-1
+                            total_neg += dollar_amt
+                        else:
+                            dollar_amt = exact['trade_price']*abs(exact['quantity'])
+                            total_pos += dollar_amt
+                        curr_profit += dollar_amt
+                        total_qty += exact['quantity']
+                        if index != 0 and total_qty == 0:
+                            if curr_profit > 0:
+                                wins += 1
+                            else:
+                                losses += 1
+                            if total_pos == 0:
+                                profit += 0
+                            else:
+                                profit += round((total_pos+total_neg) /abs(total_neg),5)
+            if losses == 0:
+                score = (profit)
+            else:
+                score = (profit) * (wins/(losses+wins))
+            score += (wins*0.1)
+            score -= (losses*0.1)
+            leaderboard.append((round(score*100,2), name))
     leaderboard.sort(reverse=True)
     return leaderboard
+    # trades_db = pd.read_csv('trades_db.csv')
+    # positions_db = pd.read_csv('positions_db.csv')
+    # member_profits = {}
+    # for index, row in trades_db.iterrows():
+    #     trade_id = row['ID']
+    #     linked_positions = positions_db[positions_db['id'] == trade_id]
+    #     sum_closed = 0
+    #     for index, pos_row in linked_positions.iterrows():
+    #         if pos_row['closing']:
+    #             sum_closed += 1
+    #     if sum_closed >= len(linked_positions)/2:
+    #         for index, pos_row in linked_positions.iterrows():
+    #             if pos_row['closing']:
+    #                 if dt.datetime.strptime(pos_row['time'].split(' ')[0], '%Y-%m-%d').month == dt.datetime.now().month:                  
+    #                     if not (row['TRADER'] == 'SammySnipes' or row['TRADER']  == 'MoneyMan' or row['TRADER']  == 'Engine Trades' or row['TRADER'] == 'TacoTradez🌮'):
+    #                         if not pd.isnull(row['PROFIT']):
+    #                             if row['TRADER'] in member_profits.keys():
+    #                                 if row['PROFIT'] > 0:
+    #                                     member_profits[row['TRADER']] = (member_profits[row['TRADER']][0] + row['PROFIT'], member_profits[row['TRADER']][1] + 1, member_profits[row['TRADER']][2])
+    #                                 else:
+    #                                     member_profits[row['TRADER']] = (member_profits[row['TRADER']][0] + row['PROFIT'], member_profits[row['TRADER']][1], member_profits[row['TRADER']][2] + 1)
+    #                             else:
+    #                                 if row['PROFIT'] >= -0.1:
+    #                                     member_profits[row['TRADER']] = (row['PROFIT'], 1, 0)
+    #                                 else:
+    #                                     member_profits[row['TRADER']] = (row['PROFIT'], 0, 1)
+    # leaderboard = []
+    # for key in member_profits.keys():
+    #     profit = round(member_profits[key][0],2)
+    #     win = member_profits[key][1]
+    #     loss = member_profits[key][2]
+    #     if loss == 0:
+    #         score = (profit/100)
+    #     else:
+    #         score = (profit/100) * (win/(loss+win))
+    #     score += (win*0.7)
+    #     score -= (loss*0.7)
+    #     leaderboard.append((round(score*10,2), key))
+    # leaderboard.sort(reverse=True)
+    # return leaderboard
 
 def view_account(name):
     response_code, response = ACCOUNT_HANDLER.view_account(name)
@@ -592,6 +646,70 @@ async def account(ctx, *, params):
 async def view(ctx, *, params):
     if params.split(' ')[0] == 'commands':
         await ctx.channel.send("\n**OPENING COMMANDS**\n'in', 'bought', 'grabbed', 'grabbing', 'buying', 'bto', 'btc','swing', 'swinging', 'buy','open'\n**CLOSING COMMANDS**\n'cut', 'sold', 'cutting', 'selling', 'stc', 'closing', 'sto', 'sell'")
+    elif params.split(' ')[0] == 'new_stats':
+        if len(params.split(' ')) < 2:
+            name = ctx.author.name
+        else:
+            name = ''
+            if check_member_id(params) is None:
+                if '(' in params and ')' in params:
+                    start = params.find('(')
+                    end = params.find(')')
+                    name = params[start+1:end]
+                else:
+                    name = params.split(' ')[1]
+            else:
+                name = check_member_id(params)
+        positions_db = pd.read_csv('new_positions.csv', index_col=0)
+        individual_trades = positions_db[positions_db['trader'] == name]
+        if len(individual_trades) < 1:
+            await ctx.channel.send('User ' + name + ' has no stats to show')
+        else:
+            descriptions = []
+            for index, row in individual_trades.iterrows():
+                descriptions.append(row['description'])
+            descriptions = list(set(descriptions))
+            all_positions = []
+            profit = 0
+            wins = 0
+            losses = 0
+            for description in descriptions:
+                curr_quantity = 0
+                exact_positions = individual_trades[individual_trades['description'] == description]
+                if len(exact_positions) > 1:
+                    total_qty = 0
+                    curr_profit = 0
+                    total_neg = 0
+                    total_pos = 0
+                    for index, exact in exact_positions.iterrows():
+                        if exact['quantity'] > 0:
+                            dollar_amt = exact['trade_price']*abs(exact['quantity'])*-1
+                            total_neg += dollar_amt
+                        else:
+                            dollar_amt = exact['trade_price']*abs(exact['quantity'])
+                            total_pos += dollar_amt
+                        curr_profit += dollar_amt
+                        total_qty += exact['quantity']
+                        if index != 0 and total_qty == 0:
+                            if curr_profit > 0:
+                                wins += 1
+                            else:
+                                losses += 1
+                            if total_pos == 0:
+                                profit += 0
+                            else:
+                                profit += round((total_pos+total_neg) /abs(total_neg),5)
+            #leaderboard = calc_leaderboard()
+            # location = -1
+            # for index, person in enumerate(leaderboard):
+            #     if person[1] == name:
+            #         location = index
+            embedVar = discord.Embed(title="Stats for user " + name, description='', color=0x00e6b8)
+            embedVar.add_field(name='% Profit', value=str(profit*100) + '%', inline=False)
+            embedVar.add_field(name='# Wins', value=str(wins), inline=True)
+            embedVar.add_field(name='# Losses', value=str(losses), inline=True)
+            #embedVar.add_field(name='Leaderboard Ranking', value=str(location+1), inline=False)
+            await ctx.channel.send(embed=embedVar)
     elif params.split(' ')[0] == 'stats':
         trades_db = pd.read_csv('trades_db.csv')
         if len(params.split(' ')) < 2:
@@ -639,8 +757,8 @@ async def view(ctx, *, params):
         for index, person in enumerate(leaderboard[:10]):
             embedVar.add_field(name='#' + str(index+1), value=person[1] + ' Score ' + str(person[0]) + ' pts', inline=False)
         await ctx.channel.send(embed=embedVar)
-    elif params.split(' ')[0] == 'status':
-        if len(params.split(' ')) < 2:
+    elif params.split(' ')[0] == 'new_status':
+        if len(params.lower().replace('id=true', '').strip().split(' ')) < 2:
             name = ctx.author.name
         else:
             name = ''
@@ -653,11 +771,44 @@ async def view(ctx, *, params):
                     name = params.split(' ')[1]
             else:
                 name = check_member_id(params)
-        print(name)
+        positions_db = pd.read_csv('new_positions.csv', index_col=0)
+        individual_trades = positions_db[positions_db['trader'] == name]
+        descriptions = []
+        for index, row in individual_trades.iterrows():
+            descriptions.append(row['description'])
+        descriptions = list(set(descriptions))
+        all_positions = []
+        for description in descriptions:
+            curr_quantity = 0
+            exact_positoins = individual_trades[individual_trades['description'] == description]
+            for index, exact in exact_positoins.iterrows():
+                curr_quantity += int(exact['quantity'])
+            if curr_quantity != 0:
+                all_positions.append((description, curr_quantity))
+        if len(all_positions) < 1:
+            await ctx.channel.send('Either unable to find user ' + name + ' or user ' + name + ' has no open positions to show')
+        else:
+            embedVar = discord.Embed(title=name+"'s current public positions", description='These may not be fully accurate due to inconsitency in closing of positions.', color=0x00e6b8)
+            for description, quantity in all_positions:
+                embedVar.add_field(name=description, value=quantity, inline=False)
+            await ctx.channel.send(embed=embedVar)
+    elif params.split(' ')[0] == 'status':
+        if len(params.lower().replace('id=true', '').strip().split(' ')) < 2:
+            name = ctx.author.name
+        else:
+            name = ''
+            if check_member_id(params) is None:
+                if '(' in params and ')' in params:
+                    start = params.find('(')
+                    end = params.find(')')
+                    name = params[start+1:end]
+                else:
+                    name = params.split(' ')[1]
+            else:
+                name = check_member_id(params)
         trades_db = pd.read_csv('trades_db.csv', index_col=0)
         positions_db = pd.read_csv('positions_db.csv', index_col=0)
         individual_trades = trades_db[trades_db['TRADER'] == name]
-        print(individual_trades)
         individual_trades = individual_trades[individual_trades['CLOSED'] == False]
         if len(individual_trades) < 1:
             await ctx.channel.send('Either unable to find user ' + name + ' or user ' + name + ' has no open positions to show')
@@ -685,7 +836,10 @@ async def view(ctx, *, params):
                     value += long_str
                 if shorts:
                     value += short_str
-                value += ' ' + row['DATE']
+                if "id=true" in params.lower():
+                    value += ' ' + row['DATE'] + ' ID: ' + row['ID']
+                else:
+                    value += ' ' + row['DATE']
                 embedVar.add_field(name=title, value=value, inline=False)
             await ctx.channel.send(embed=embedVar)
     elif params.split(' ')[0] == 'listen':
@@ -714,11 +868,11 @@ async def view(ctx, *, params):
     else:
         await ctx.channel.send('Unkown view command')
 
-@client.command(aliases=['in', "bought", "grabbed", 'grabbing', 'buying', 'bto', 'btc','swing', 'swinging', 'buy','open'])
+@client.command(aliases=['in', "bought", "grabbed", 'grabbing', 'buying', 'bto', 'btc','swing', 'swinging','open'])
 async def discordopen(ctx, *, order):
     server_main = client.get_guild(UTOPIA)
     order = order.lower().replace('$', '')
-    response, message = ch.handle_open(order, ctx.author.name, ctx.channel.name, TD_ACCOUNT)
+    response, message = ch.handle_order(order, ctx.author.name, ctx.channel.name, TD_ACCOUNT)
     await ctx.channel.send(message)
     if response == 200:
         for member in broadcast(ctx, server_main):
@@ -731,6 +885,7 @@ async def discordopen(ctx, *, order):
 async def close(ctx, *, order):
     server_main = client.get_guild(UTOPIA)
     order = order.lower().replace('$', '')
+    
     response, message = ch.handle_closing_order(order, ctx.author.name, ctx.channel.name, TD_ACCOUNT)
     print(ctx.author.name)
     if (ctx.author.name == 'SammySnipes' or ctx.author.name == 'MoneyMan' or ctx.author.name == 'Engine Trades' or ctx.author.name =='Charlie678'):

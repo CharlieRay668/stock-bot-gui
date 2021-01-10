@@ -128,6 +128,7 @@ class ClientWebsocket():
         return True
 
     def on_open(self, ws):
+        print('RUNNING')
         def run(*args):
             ws.send(self.login)
             time.sleep(1)
