@@ -6,6 +6,15 @@ from TDRestAPI import Rest_Account
 import uuid
 from csv_manager import CSVHandler
 
+look_up = {'01': 'January', '02': 'Febuary', '03': 'March', '04': 'April', '05': 'May',
+            '06': 'June', '07': 'July', '08': 'August', '09': 'September', '10': 'October', '11': 'November', '12': 'December'}
+
+look_up_short = {'01': 'Jan', '02': 'Feb', '03': 'Mar', '04': 'Apr', '05': 'May',
+            '06': 'Jun', '07': 'Jul', '08': 'Aug', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec'}
+
+reverse_look_up = {'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05',
+            'Jun': '06', 'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'}
+
 class Option():
     def __init__(self, ticker, side, strike, date, symbol):
         self.ticker = ticker
@@ -141,14 +150,16 @@ def handle_single_order(order, author, channel, td_account):
     avg_price = None
     for item in order:
         if '@' in item:
-            avg_price = item
-            found.append(avg_price.replace('@', ''))
+            avg_price = item.replace('@', '')
+            found.append(item)
     # Parsing strikes is different for individual options and complex orders
     options = []
     # Maybe hard code complex orders
     # If the order is complex continue
     # For each item that we have found (ticker, date, average price) remove it from the order string to make parsing strikes and order side easier.
+    print(order, found)
     for item in found:
+        print(item)
         order.remove(item.lower())
     quantity = None
     for item in order:
@@ -157,7 +168,10 @@ def handle_single_order(order, author, channel, td_account):
             quantity = item.replace('qty', '')
             quantity = quantity.replace('=','').replace(':','')
     if quantity is None:
-        return 403, 'Quantity not Found'
+        quantity = 100
+        quantity_str = '100'
+        order.append(quantity_str)
+        #return 403, 'Quantity not Found'
     found = []
     found.append(quantity_str)
     for item in found:
@@ -208,7 +222,7 @@ def handle_single_order(order, author, channel, td_account):
         gamma = quote['gamma']
         vega = quote['vega']
         volatility = quote['volatility']
-        description = quote['description']
+        description = quote['description'].replace('(Weekly)', '').strip()
         if description == 'Symbol not found':
             return 305, 'Symbol not found'
         asset_type = quote['assetType']
@@ -227,126 +241,218 @@ def handle_temp_order(order, author, channel, td_account, desired_function):
         return 200, position_df
     return position_status, data
 
-def handle_closing_order(order, author, channel, td_account, specific_trade=(True, None)):
-    commands = pd.read_csv('command_db.csv')['NAME'].values
-    order_splits = order.split(' ')
-    name = order_splits[0]
-    trade_db = pd.read_csv('trades_db.csv', index_col=0)
-    if specific_trade[1] is None:
-        trade = trade_db[trade_db['CLOSED'] == False]
-        if name in commands:
-            single = False
-            trade = trade[trade['COMMAND'] == name]
-            ticker = order_splits[1].upper()
-        else:
-            single = True
-            trade = trade[trade['COMMAND'] == 'standard'] 
-            ticker = order_splits[0].upper()
-        trade = trade[trade['TRADER'] == author]
-        trade = trade[trade['TICKER'] == ticker]
+def get_open_positions(username):
+    positions_db = pd.read_csv('new_positions.csv', index_col=0)
+    user_positions = positions_db[positions_db['trader'] == username]
+    descriptions = []
+    for index, row in user_positions.iterrows():
+        descriptions.append(row['description'])
+    descriptions = list(set(descriptions))
+    open_descriptions = []
+    for description in descriptions:
+        same_trades = user_positions[user_positions['description'] == description]
+        qty = 0
+        for index, pos in same_trades.iterrows():
+            qty += pos['quantity']
+        if qty > 0 or qty < 0:
+            open_descriptions.append((qty, description))
+    return open_descriptions
+
+def order_to_description(order):
+    splits = order.split(' ')
+    date = None
+    ticker = splits[0]
+    strike = None
+    side = None
+    for item in splits:
+        if '/' in item:
+            date = item
+    if 'call' or 'c' or 'calls' in order.lower():
+        side = 'Call'
+    elif 'put' or 'p' or 'puts' in order.lower():
+        side = 'Put'
+    for item in splits:
+        if 's' in item and (check_int(item.replace('s','').replace(':','').replace('=',''))):
+            strike = item
+    if date is not None:
+        print(date)   
+        if len(date.split('/')) == 2:
+            year = '2021'
+        elif len(date.split('/')) == 3:
+            year = date.split('/')[2]
+        month = str(date.split('/')[0])
+        if len(month) < 2:
+            month = '0' + month
+        day = str(date.split('/')[1])
+        return_str = ticker.upper() + ' ' + look_up_short[month] + ' ' + day + ' ' + year + ' ' + str(strike) + ' ' + str(side)
+        return date, ticker, strike, side, return_str
+    return_str = ticker.upper() + ' None ' + str(strike) + ' ' + str(side)
+    return date, ticker, strike, side, return_str
+
+
+def close_position_given_symbol_qty(qty, symbol, author, channel, td_account):
+    trade_id = uuid.uuid1().hex
+    ticker = symbol.split('_')[0]
+    other_info = symbol.split('_')[1]
+    month = other_info[:2]
+    day = other_info[2:4]
+    year = other_info[4:6]
+    side = other_info[6]
+    if side == 'C':
+        side == 'Calls'
+    if side == 'P':
+        side == 'Puts'
+    strike = other_info[7:]
+    date = month+'/'+day+'/'+year
+    quantity = qty*-1
+    quotes = td_account.get_quotes(symbol)
+    positions = []
+    # For each option extract relevant quote data and append all of the information into a list which will stand as a position.
+    quote = quotes.iloc[0]
+    bid_price = quote['bidPrice']
+    ask_price = quote['askPrice']
+    if quantity > 0:
+        trade_price = quote['askPrice']
+    elif quantity < 0:
+        trade_price = quote['bidPrice']
     else:
-        single = specific_trade[0]
-        trade = specific_trade[1]
-    if len(trade) == 1:
-        trade_id = trade['ID'].values[0]
-        positions = pd.read_csv('positions_db.csv', index_col=0)
-        positions = positions[positions['id'] == trade_id]
-        new_positions = []
-        new_data ={'bidPrice':None,'askPrice':None,'delta':None,'theta':None,'gamma':None,'volatility':None,'description':None,'assetType':None}
-        symbols = []
-        for index, position_row in positions.iterrows():
-            symbols.append(position_row['symbol'])
-        quotes = td_account.get_quotes(symbols)
-        quote_index = 0
-        for index, position_row in positions.iterrows():
-            new_position = []
-            if not single:
-                quote = quotes.iloc[quote_index]
-            else:
-                quote = quotes.iloc[0]
-            quote_index +=1
-            for key in new_data.keys():
-                new_data[key] = quote[key]
-            for index, data_point in enumerate(position_row):
-                if index == len(position_row)-1:
-                    new_position.append(True)
-                else:
-                    new_position.append(data_point)
-            temp_columns = ['id', 'ticker', 'date', 'side', 'strike', 'bidPrice', 'askPrice', 'delta', 'theta', 'gamma', 'volatility', 'description', 'assetType', 'symbol', 'short_trade', 'executed', 'trader', 'channel', 'time','closing']
-            position_dict = dict(zip(temp_columns, new_position))
-            for key in new_data.keys():
-                position_dict[key] = new_data[key]
-            position_dict['time'] = dt.datetime.now()
-            new_positions.append(position_dict.values())
-        columns = ['id', 'ticker', 'date', 'side', 'strike', 'bidPrice', 'askPrice', 'delta', 'theta', 'gamma', 'volatility', 'description', 'assetType', 'symbol', 'short_trade', 'executed', 'trader', 'channel', 'time','closing']
-        new_positions_df = pd.DataFrame(data=new_positions, columns=columns)
-        position_db = pd.read_csv('positions_db.csv', index_col=0)
-        position_db = position_db.append(new_positions_df, ignore_index = True)
-        position_db.to_csv('positions_db.csv')
-        credit = 0
-        for index, row in new_positions_df.iterrows():
-            if row['short_trade']:
-                credit -= row['bidPrice']
-            else:
-                credit += row['askPrice']
-        credit = round(float(credit), 2)
-        trade['PROFIT'] =  round(float(((credit + trade['NET_PRICE'].values[0])/abs(trade['NET_PRICE']))*100),2)
-        trade['CLOSED'] = True
-        trade_db.iloc[trade.index] = trade
-        trade_db.to_csv('trades_db.csv')
-        profit_str = ' for recorded profit of ' + str(round(float(((credit + trade['NET_PRICE'].values[0])/abs(trade['NET_PRICE']))*100),2)) + '%'
-        sell_str = ' Buying the'
-        buy_str = ' Selling the' 
-        x = 0
-        s = 0
-        for index, position in new_positions_df.iterrows():
-            if position['short_trade']:
-                sell_str += ' ' +str(position['strike']) + ' ' + str(position['side']).lower().replace('s', '') + ' and'
-            else:
-                buy_str += ' ' +str(position['strike']) + ' ' + str(position['side']).lower().replace('s', '') + ' and' 
-        if single:
-            for index, position in new_positions_df.iterrows():
-                if not position['short_trade']:
-                    buy_str = ' ' +str(position['strike']) + ' ' + str(position['side']).lower().replace('s', '') 
-            return 200, '**Success**\nClosed ' + trade['TICKER'].values[0] + buy_str + ' ' +  trade['DATE'].values[0] + profit_str
-        return 200, '**Success**\nClosed ' + trade['TICKER'].values[0] + ' ' + trade['COMMAND'].values[0] + ' ' + trade['DATE'].values[0] + buy_str + sell_str + profit_str
-    elif len(trade) == 0:
-        return 100, 'Failed to find position in holdings. Type .check status to view your current holdings'
-    elif len(trade) == 2:
-        if len(order_splits) < 2:
-            return 101, trade
-        if single:
-            date = None
-            for item in order_splits:
-                if '/' in item:
-                    date = item
-            strike = None
-            if date is None:
-                for item in order_splits:
-                    if check_float(item):
-                        strike = item
-            positions = pd.read_csv('positions_db.csv')
-            ids = []
-            for index, tr in trade.iterrows():
-                ids.append(tr['ID'])
-            trade_id = None
-            if date is not None:
-                for index, tr in trade.iterrows():
-                    if tr['DATE'] == date:
-                        trade_id = tr['ID']
-            if strike is not None:
-                for pos_id in ids:
-                    spec_positions = positions[positions['id'] == pos_id]
-                    for index, row in spec_positions.iterrows():
-                        if float(row['strike']) == float(strike):
-                            for trade_index, trade_row in trade.iterrows():
-                                if trade_row['ID'] == row['id']:
-                                    trade_id = row['id']
-            if trade_id is None:
-                return 100, 'Failed to find position in holdings. Type .check status to view your current holdings'
-            return handle_closing_order(order, author, channel, td_account, (True, trade[trade['ID'] == trade_id]))
+        return 100, "Don't put 0 as quantity"
+    delta = quote['delta']
+    theta = quote['theta']
+    gamma = quote['gamma']
+    vega = quote['vega']
+    volatility = quote['volatility']
+    description = quote['description'].replace('(Weekly)','').strip()
+    if description == 'Symbol not found':
+        return 305, 'Symbol not found'
+    asset_type = quote['assetType']
+    positions.append([trade_id, ticker, asset_type, symbol, quantity, date, side, trade_price, strike, bid_price, ask_price, delta, theta, gamma, vega, description, author, channel, dt.datetime.now()])
+    columns = ['id', 'ticker', 'asset', 'symbol', 'quantity', 'date', 'side','trade_price', 'strike', 'bidPrice', 'askPrice', 'delta', 'theta', 'gamma', 'vega', 'description', 'trader', 'channel', 'time']
+    position_df = pd.DataFrame(data=positions, columns=columns)
+    position_csv_handler = CSVHandler('new_positions.csv', 'id')
+    position_csv_handler.add_rows(position_df)
+    return 200, position_df
+
+def description_from_symbol(symbol):
+    ticker = symbol.split('_')[0]
+    other_info = symbol.split('_')[1]
+    month = other_info[:2]
+    day = other_info[2:4]
+    if day[0] == '0':
+        day = day[1:]
+    year = other_info[4:6]
+    year = '20' + year
+    side = other_info[6]
+    if side == 'C':
+        side = 'Call'
+    if side == 'P':
+        side = 'Put'
+    strike = other_info[7:]
+    return ticker.upper() + ' ' + look_up_short[month] + ' ' + day + ' ' + year + ' ' + strike + ' ' + side
+
+def symbol_from_description(description):
+    splits = description.split(' ')
+    ticker = splits[0]
+    month = splits[1]
+    month = reverse_look_up[month]
+    day = splits[2]
+    if len(day) < 2:
+        day = '0' + day
+    year = splits[3]
+    year = year[2:]
+    strike = splits[4]
+    side = splits[5]
+    if side == 'Call':
+        side = 'C'
+    if side == 'Put':
+        side = 'P'
+    symbol = ticker.upper() + '_' + month + day + year + side + strike
+    return symbol
+
+def close_position_given_symbol(symbol, author, channel, td_account):
+    needed_desctiption = description_from_symbol(symbol)
+    print(needed_desctiption)
+    status, response = close_position_given_description(needed_desctiption, author, channel, td_account)
+    if status != 200:
+        return 300, 'Unable to find any open positions with the exact symbol ' + symbol
+    return status, response
+
+def close_position_given_description(description, author, channel, td_account):
+    open_positions = get_open_positions(author)
+    for qty, open_description in open_positions:
+        if open_description == description:
+            symbol = symbol_from_description(description)
+            close_position_given_symbol_qty(qty, symbol, author, channel, td_account)
+            if qty > 0:
+                return 200, 'Closed position\n ' + description + '. Sold ' + str(qty) + ' shares/contracts.'
+            elif qty < 0:
+                return 200, 'Closed position\n ' + description + '. Bought ' + str(qty) + ' shares/contracts.'
+    return 300, 'Unable to find any open position with the exact description ' + description
+
+def handle_closing_order(order, author, channel, td_account):
+    date, ticker, strike, side, attempted_description = order_to_description(order)
+    ticker = ticker.upper()
+    positions_db = pd.read_csv('new_positions.csv', index_col=0)
+    open_positions = get_open_positions(author)
+    descriptions = []
+    for qty, description in open_positions:
+        descriptions.append(description)
+    targeted = [description for description in descriptions if ticker in description]
+    if len(targeted) == 0:
+        return 300, 'Unable to find any holdings with underlying ' + ticker
+    if len(targeted) == 1:
+        for qty, description in open_positions:
+            if description == targeted[0]:
+                symbol = symbol_from_description(description)
+                close_position_given_symbol_qty(qty, symbol, author, channel, td_account)
+                if qty > 0:
+                    return 200, 'Closed position\n ' + description + '. Sold ' + str(qty) + ' shares/contracts.'
+                elif qty < 0:
+                    return 200, 'Closed position\n ' + description + '. Bought ' + str(qty) + ' shares/contracts.'
+    if date is not None:
+        date_str = attempted_description.split(' ')[1:4]
+        targeted = [description for description in targeted if date_str in description]
+        if len(targeted) == 0:
+            return 300, 'Unable to find any holdings with both underlying ' + ticker + ' and expiry ' + date_str
+        if len(targeted) == 1:
+            for qty, description in open_positions:
+                if description == targeted[0]:
+                    symbol = symbol_from_description(description)
+                    close_position_given_symbol_qty(qty, symbol, author, channel, td_account)
+                    if qty > 0:
+                        return 200, 'Closed position\n ' + description + '. Sold ' + str(qty) + ' shares/contracts.'
+                    elif qty < 0:
+                        return 200, 'Closed position\n ' + description + '. Bought ' + str(qty) + ' shares/contracts.'
+    if strike is not None:
+        targeted = [description for description in targeted if strike in description]
+        if len(targeted) == 0:
+            return 300, 'Unable to find any holdings with both underlying ' + ticker + ' and strike ' + strike
+        if len(targeted) == 1:
+            for qty, description in open_positions:
+                if description == targeted[0]:
+                    symbol = symbol_from_description(description)
+                    close_position_given_symbol_qty(qty, symbol, author, channel, td_account)
+                    if qty > 0:
+                        return 200, 'Closed position\n ' + description + '. Sold ' + str(qty) + ' shares/contracts.'
+                    elif qty < 0:
+                        return 200, 'Closed position\n ' + description + '. Bought ' + str(qty) + ' shares/contracts.'
+    if side is not None:
+        targeted = [description for description in targeted if side in description]
+        if len(targeted) == 0:
+            return 300, 'Unable to find any holdings with both underlying ' + ticker + ' and side ' + side
+        if len(targeted) == 1:
+            for qty, description in open_positions:
+                if description == targeted[0]:
+                    symbol = symbol_from_description(description)
+                    close_position_given_symbol_qty(qty, symbol, author, channel, td_account)
+                    if qty > 0:
+                        return 200, 'Closed position\n ' + description + '. Sold ' + str(qty) + ' shares/contracts.'
+                    elif qty < 0:
+                        return 200, 'Closed position\n ' + description + '. Bought ' + str(qty) + ' shares/contracts.'
+    return 300, 'Unable to close position with given information. I thought you said\nTICKER:**'+ticker+'** DATE:**'+date+'** STRIKE:**'+strike+'** SIDE:**' +side+'**'
       
 def handle_order(order, author, channel, td_account):
+    order_splits = order.split(' ')
     commands = pd.read_csv('command_db.csv')['NAME'].values
     name = 'Single'
     desired_function = handle_single_order
@@ -360,7 +466,6 @@ def handle_order(order, author, channel, td_account):
         desired_function = parse_debitspread
         name = 'Debit Spread'
     status_code, data = handle_temp_order(order, author, channel, td_account, desired_function)
-    print(status_code, data)
     if status_code == 200:
         if name == 'Single':
             position_df = data
@@ -376,37 +481,6 @@ def handle_order(order, author, channel, td_account):
             return 200, '**Success**\nOpened **' + ticker.upper() + ' ' + str(strike) + ' ' + side + ' ' + date + '**\nFilled at ' + str(fill_price)
         else:
             pass
-        # position_df = data
-        # positions = []
-        # for i in range(0, position_df.shape[0]):
-        #     positions.append(position_df.iloc[i])
-        # sell_str = 'Selling the'
-        # buy_str = 'Buying the' 
-        # x = 0
-        # s = 0
-        # for position in positions:
-        #     if position['short_trade']:
-        #         sell_str += ' ' +str(position['strike']) + ' ' + str(position['side']).lower().replace('s', '') + ' and'
-        #     else:
-        #         buy_str += ' ' +str(position['strike']) + ' ' + str(position['side']).lower().replace('s', '') + ' and' 
-        # sell_str = ' '.join(sell_str.split(' ')[:-1])
-        # buy_str = ' '.join(buy_str.split(' ')[:-1])
-        # credit = ''
-        # if trade_sr['NET_PRICE'] > 0:
-        #     credit = ' TOA '
-        # else:
-        #     credit = ' TOA '
-        # price_str = ''
-        # if trade_sr['AVG_PRICE'] == None:
-        #     price_str = credit + str(trade_sr['NET_PRICE'])
-        # else:
-        #     price_str = credit + str(trade_sr['NET_PRICE']) + ' Avg Price ' + str(trade_sr['AVG_PRICE'])
-        # if name == 'standard':
-        #     position = positions[0]
-        #     strike = position['strike']
-        #     side = position['side']
-        #     return 200, '**Success**\nOpened **' + trade_sr['TICKER'] + ' ' + strike + ' ' + side + ' ' + trade_sr['DATE'] + '** ' + price_str
-        # return 200, '**Success**\nOpened ' + trade_sr['TICKER'] + ' ' + name[0].upper()+name[1:] + ' ' + buy_str + ', ' + sell_str + ' for ' + trade_sr['DATE'] + price_str
     elif status_code == 300:
         return 300, '**Unable to parse average price**'
     elif status_code == 301:
@@ -416,9 +490,9 @@ def handle_order(order, author, channel, td_account):
     elif status_code == 400:
         return 400, '**Unable to find any strikes**'
     elif status_code == 401:
-        return 401, '**Invalid number of strikes**\nI was expecting ' + command_info['STRIKE_NUM'] + ' strikes'
+        return 401, '**Invalid number of strikes**\nI was expecting at least one strike'
     elif status_code == 402:
-        return 402, '**Expiration date not found**\nMake sure to indicate date with ' + command_info['DATE_SEP']
+        return 402, '**Expiration date not found**\nMake sure to indicate date with /'
     elif status_code == 403:
         return 402, '**Quantity not found**\nMake sure to specify with qty or turn off quantity via .account disable quantity'
     elif status_code == 399:

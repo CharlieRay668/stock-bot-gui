@@ -16,11 +16,11 @@ import numpy as np
 import new_command_handler as ch
 from account_handler import AccountHandler
 import math
-import locale
+#import locale
 # import WatchlistHandler as watchlist_handler
 # import WatchlistDiscordHandler as watchlist_discord_handler
 
-locale.setlocale(locale.LC_ALL, 'en_US')
+#locale.setlocale(locale.LC_ALL, 'en_US')
 
 intents = discord.Intents.default()
 intents.members = True
@@ -426,115 +426,79 @@ async def record(ctx, *, params):
         print(type(param))
 
 def calc_leaderboard():
-    member_names = [member.name for member in client.get_guild(UTOPIA).members]
+    member_names = [member.name for member in client.get_guild(UTOPIA).members if 'Admins' not in member.roles]
     leaderboard = []
     for name in member_names:
-        positions_db = pd.read_csv('new_positions.csv', index_col=0)
-        individual_trades = positions_db[positions_db['trader'] == name]
-        if len(individual_trades) > 1:
-            descriptions = []
-            for index, row in individual_trades.iterrows():
-                descriptions.append(row['description'])
-            descriptions = list(set(descriptions))
-            all_positions = []
-            profit = 0
-            wins = 0
-            losses = 0
-            for description in descriptions:
-                curr_quantity = 0
-                exact_positions = individual_trades[individual_trades['description'] == description]
-                if len(exact_positions) > 1:
-                    total_qty = 0
-                    curr_profit = 0
-                    total_neg = 0
-                    total_pos = 0
-                    for index, exact in exact_positions.iterrows():
-                        if exact['quantity'] > 0:
-                            dollar_amt = exact['trade_price']*abs(exact['quantity'])*-1
-                            total_neg += dollar_amt
-                        else:
-                            dollar_amt = exact['trade_price']*abs(exact['quantity'])
-                            total_pos += dollar_amt
-                        curr_profit += dollar_amt
-                        total_qty += exact['quantity']
-                        if index != 0 and total_qty == 0:
-                            if curr_profit > 0:
-                                wins += 1
+        if not (name == 'SammySnipes' or name  == 'MoneyMan' or name  == 'Engine Trades' or name == 'TacoTradez🌮'):
+            positions_db = pd.read_csv('new_positions.csv', index_col=0)
+            individual_trades = positions_db[positions_db['trader'] == name]
+            if len(individual_trades) > 1:
+                descriptions = []
+                for index, row in individual_trades.iterrows():
+                    descriptions.append(row['description'])
+                descriptions = list(set(descriptions))
+                all_positions = []
+                profit = 0
+                wins = 0
+                losses = 0
+                for description in descriptions:
+                    curr_quantity = 0
+                    exact_positions = individual_trades[individual_trades['description'] == description]
+                    if len(exact_positions) > 1:
+                        total_qty = 0
+                        curr_profit = 0
+                        total_neg = 0
+                        total_pos = 0
+                        for index, exact in exact_positions.iterrows():
+                            if exact['quantity'] > 0:
+                                dollar_amt = exact['trade_price']*abs(exact['quantity'])*-1
+                                total_neg += dollar_amt
                             else:
-                                losses += 1
-                            if total_pos == 0:
-                                profit += 0
-                            else:
-                                profit += round((total_pos+total_neg) /abs(total_neg),5)
-            if losses == 0:
-                score = (profit)
-            else:
-                score = (profit) * (wins/(losses+wins))
-            score += (wins*0.1)
-            score -= (losses*0.1)
-            leaderboard.append((round(score*100,2), name))
+                                dollar_amt = exact['trade_price']*abs(exact['quantity'])
+                                total_pos += dollar_amt
+                            curr_profit += dollar_amt
+                            total_qty += exact['quantity']
+                            if index != 0 and total_qty == 0:
+                                if dt.datetime.strptime(exact['time'].split(' ')[0], '%Y-%m-%d').month == dt.datetime.now().month: 
+                                    if curr_profit > 0:
+                                        wins += 1
+                                    else:
+                                        losses += 1
+                                    if total_pos == 0:
+                                        profit += 0
+                                    else:
+                                        profit += round((total_pos+total_neg) /abs(total_neg),5)
+                if losses == 0 or wins == 0:
+                    score = (profit)
+                else:
+                    score = (profit) * (wins/(losses+wins))
+                score += (wins*0.1)
+                score -= (losses*0.1)
+                leaderboard.append((round(score*100,2), name))
     leaderboard.sort(reverse=True)
+    print(leaderboard)
     return leaderboard
-    # trades_db = pd.read_csv('trades_db.csv')
-    # positions_db = pd.read_csv('positions_db.csv')
-    # member_profits = {}
-    # for index, row in trades_db.iterrows():
-    #     trade_id = row['ID']
-    #     linked_positions = positions_db[positions_db['id'] == trade_id]
-    #     sum_closed = 0
-    #     for index, pos_row in linked_positions.iterrows():
-    #         if pos_row['closing']:
-    #             sum_closed += 1
-    #     if sum_closed >= len(linked_positions)/2:
-    #         for index, pos_row in linked_positions.iterrows():
-    #             if pos_row['closing']:
-    #                 if dt.datetime.strptime(pos_row['time'].split(' ')[0], '%Y-%m-%d').month == dt.datetime.now().month:                  
-    #                     if not (row['TRADER'] == 'SammySnipes' or row['TRADER']  == 'MoneyMan' or row['TRADER']  == 'Engine Trades' or row['TRADER'] == 'TacoTradez🌮'):
-    #                         if not pd.isnull(row['PROFIT']):
-    #                             if row['TRADER'] in member_profits.keys():
-    #                                 if row['PROFIT'] > 0:
-    #                                     member_profits[row['TRADER']] = (member_profits[row['TRADER']][0] + row['PROFIT'], member_profits[row['TRADER']][1] + 1, member_profits[row['TRADER']][2])
-    #                                 else:
-    #                                     member_profits[row['TRADER']] = (member_profits[row['TRADER']][0] + row['PROFIT'], member_profits[row['TRADER']][1], member_profits[row['TRADER']][2] + 1)
-    #                             else:
-    #                                 if row['PROFIT'] >= -0.1:
-    #                                     member_profits[row['TRADER']] = (row['PROFIT'], 1, 0)
-    #                                 else:
-    #                                     member_profits[row['TRADER']] = (row['PROFIT'], 0, 1)
-    # leaderboard = []
-    # for key in member_profits.keys():
-    #     profit = round(member_profits[key][0],2)
-    #     win = member_profits[key][1]
-    #     loss = member_profits[key][2]
-    #     if loss == 0:
-    #         score = (profit/100)
-    #     else:
-    #         score = (profit/100) * (win/(loss+win))
-    #     score += (win*0.7)
-    #     score -= (loss*0.7)
-    #     leaderboard.append((round(score*10,2), key))
-    # leaderboard.sort(reverse=True)
-    # return leaderboard
 
 def view_account(name):
     response_code, response = ACCOUNT_HANDLER.view_account(name)
     if response_code == 400:
         return 400, "**ERROR**\n Hmm, it doesn't seem like you have an account. Type .account create to create one"
     elif response_code == 200:
-        embedVar = discord.Embed(title="Account info for user " + name, description='', color=0x00e6b8)
-        embedVar.add_field(name='Porfolio Value', value='$' + locale.format_string("%d", response['port_value'], grouping=True), inline=False)
-        embedVar.add_field(name='Default Trade Type', value = response['default_type'])
-        trade_amount = ''
-        if response['default_type'] == 'CASH':
-            trade_amount = '$' + locale.format_string("%d", response['default_amount'], grouping=True)
-        elif response['default_type'] == 'NUMERIC':
-            trade_amount = locale.format_string("%d", response['default_amount'], grouping=True) + ' contracts'
-        embedVar.add_field(name='Default Trade Amount', value=trade_amount, inline=True)
-        if type(response['tradingview']) is not str:
-            pass
-        else:
-            embedVar.add_field(name='Tradingview account', value=response['tradingview'], inline=False)
-        return 200, embedVar
+        return 200, "**UNSUPPORTED**\n Sorry, it seems like you're trying to access something that is currently under devlopment."
+        # embedVar = discord.Embed(title="Account info for user " + name, description='', color=0x00e6b8)
+        # embedVar.add_field(name='Porfolio Value', value='$' + locale.format_string("%d", response['port_value'], grouping=True), inline=False)
+        # embedVar.add_field(name='Default Trade Type', value = response['default_type'])
+        # trade_amount = ''
+        # if response['default_type'] == 'CASH':
+        #     trade_amount = '$' + locale.format_string("%d", response['default_amount'], grouping=True)
+        # elif response['default_type'] == 'NUMERIC':
+        #     trade_amount = locale.format_string("%d", response['default_amount'], grouping=True) + ' contracts'
+        # embedVar.add_field(name='Default Trade Amount', value=trade_amount, inline=True)
+        # if type(response['tradingview']) is not str:
+        #     pass
+        # else:
+        #     embedVar.add_field(name='Tradingview account', value=response['tradingview'], inline=False)
+        # return 200, embedVar
 
 @client.command()
 async def account(ctx, *, params):
@@ -646,7 +610,7 @@ async def account(ctx, *, params):
 async def view(ctx, *, params):
     if params.split(' ')[0] == 'commands':
         await ctx.channel.send("\n**OPENING COMMANDS**\n'in', 'bought', 'grabbed', 'grabbing', 'buying', 'bto', 'btc','swing', 'swinging', 'buy','open'\n**CLOSING COMMANDS**\n'cut', 'sold', 'cutting', 'selling', 'stc', 'closing', 'sto', 'sell'")
-    elif params.split(' ')[0] == 'new_stats':
+    elif params.split(' ')[0] == 'stats':
         if len(params.split(' ')) < 2:
             name = ctx.author.name
         else:
@@ -699,54 +663,13 @@ async def view(ctx, *, params):
                                 profit += 0
                             else:
                                 profit += round((total_pos+total_neg) /abs(total_neg),5)
-            #leaderboard = calc_leaderboard()
-            # location = -1
-            # for index, person in enumerate(leaderboard):
-            #     if person[1] == name:
-            #         location = index
-            embedVar = discord.Embed(title="Stats for user " + name, description='', color=0x00e6b8)
-            embedVar.add_field(name='% Profit', value=str(profit*100) + '%', inline=False)
-            embedVar.add_field(name='# Wins', value=str(wins), inline=True)
-            embedVar.add_field(name='# Losses', value=str(losses), inline=True)
-            #embedVar.add_field(name='Leaderboard Ranking', value=str(location+1), inline=False)
-            await ctx.channel.send(embed=embedVar)
-    elif params.split(' ')[0] == 'stats':
-        trades_db = pd.read_csv('trades_db.csv')
-        if len(params.split(' ')) < 2:
-            name = ctx.author.name
-        else:
-            name = ''
-            if check_member_id(params) is None:
-                if '(' in params and ')' in params:
-                    start = params.find('(')
-                    end = params.find(')')
-                    name = params[start+1:end]
-                else:
-                    name = params.split(' ')[1]
-            else:
-                name = check_member_id(params)
-        individual_trades = trades_db[trades_db['TRADER'] == name]
-        individual_trades = individual_trades[individual_trades['CLOSED'] == True]
-        print(name)
-        if len(individual_trades) < 1:
-            await ctx.channel.send('User ' + name + ' has no stats to show')
-        else:
-            profit = 0
-            wins = 0
-            losses = 0
-            for index, row in individual_trades.iterrows():
-                profit += row['PROFIT']
-                if row['PROFIT'] >= 0:
-                    wins += 1
-                else:
-                    losses +=1
             leaderboard = calc_leaderboard()
             location = -1
             for index, person in enumerate(leaderboard):
                 if person[1] == name:
                     location = index
             embedVar = discord.Embed(title="Stats for user " + name, description='', color=0x00e6b8)
-            embedVar.add_field(name='% Profit', value=str(profit) + '%', inline=False)
+            embedVar.add_field(name='% Profit', value=str(profit*100) + '%', inline=False)
             embedVar.add_field(name='# Wins', value=str(wins), inline=True)
             embedVar.add_field(name='# Losses', value=str(losses), inline=True)
             embedVar.add_field(name='Leaderboard Ranking', value=str(location+1), inline=False)
@@ -759,6 +682,41 @@ async def view(ctx, *, params):
         await ctx.channel.send(embed=embedVar)
     elif params.split(' ')[0] == 'new_status':
         if len(params.lower().replace('id=true', '').strip().split(' ')) < 2:
+            name = ctx.author.name
+        else:
+            name = ''
+            if check_member_id(params) is None:
+                if '(' in params and ')' in params:
+                    start = params.find('(')
+                    end = params.find(')')
+                    name = params[start+1:end]
+                else:
+                    name = params.split(' ')[1]
+            else:
+                name = check_member_id(params)
+        positions_db = pd.read_csv('temp_positions.csv', index_col=0)
+        individual_trades = positions_db[positions_db['trader'] == name]
+        descriptions = []
+        for index, row in individual_trades.iterrows():
+            descriptions.append(row['description'])
+        descriptions = list(set(descriptions))
+        all_positions = []
+        for description in descriptions:
+            curr_quantity = 0
+            exact_positoins = individual_trades[individual_trades['description'] == description]
+            for index, exact in exact_positoins.iterrows():
+                curr_quantity += int(exact['quantity'])
+            if curr_quantity != 0:
+                all_positions.append((description, curr_quantity))
+        if len(all_positions) < 1:
+            await ctx.channel.send('Either unable to find user ' + name + ' or user ' + name + ' has no open positions to show')
+        else:
+            embedVar = discord.Embed(title=name+"'s current public positions", description='These may not be fully accurate due to inconsitency in closing of positions.', color=0x00e6b8)
+            for description, quantity in all_positions:
+                embedVar.add_field(name=description, value=quantity, inline=False)
+            await ctx.channel.send(embed=embedVar)
+    elif params.split(' ')[0] == 'status':
+        if len(params.lower().replace('id=true', '').replace('symbol=true','').strip().split(' ')) < 2:
             name = ctx.author.name
         else:
             name = ''
@@ -784,63 +742,17 @@ async def view(ctx, *, params):
             for index, exact in exact_positoins.iterrows():
                 curr_quantity += int(exact['quantity'])
             if curr_quantity != 0:
-                all_positions.append((description, curr_quantity))
+                symbol = ch.symbol_from_description(description)
+                all_positions.append((description, curr_quantity, symbol))
         if len(all_positions) < 1:
             await ctx.channel.send('Either unable to find user ' + name + ' or user ' + name + ' has no open positions to show')
         else:
             embedVar = discord.Embed(title=name+"'s current public positions", description='These may not be fully accurate due to inconsitency in closing of positions.', color=0x00e6b8)
-            for description, quantity in all_positions:
-                embedVar.add_field(name=description, value=quantity, inline=False)
-            await ctx.channel.send(embed=embedVar)
-    elif params.split(' ')[0] == 'status':
-        if len(params.lower().replace('id=true', '').strip().split(' ')) < 2:
-            name = ctx.author.name
-        else:
-            name = ''
-            if check_member_id(params) is None:
-                if '(' in params and ')' in params:
-                    start = params.find('(')
-                    end = params.find(')')
-                    name = params[start+1:end]
+            for description, quantity, symbol in all_positions:
+                if 'symbol=true' in params:
+                    embedVar.add_field(name=description, value="QTY, " + str(quantity) +' Symbol, ' + str(symbol), inline=False)
                 else:
-                    name = params.split(' ')[1]
-            else:
-                name = check_member_id(params)
-        trades_db = pd.read_csv('trades_db.csv', index_col=0)
-        positions_db = pd.read_csv('positions_db.csv', index_col=0)
-        individual_trades = trades_db[trades_db['TRADER'] == name]
-        individual_trades = individual_trades[individual_trades['CLOSED'] == False]
-        if len(individual_trades) < 1:
-            await ctx.channel.send('Either unable to find user ' + name + ' or user ' + name + ' has no open positions to show')
-        else:
-            embedVar = discord.Embed(title=name+"'s current public positions", description='These may not be fully accurate due to inconsitency in closing of positions.', color=0x00e6b8)
-            for index, row in individual_trades.iterrows():
-                positions = positions_db[positions_db['id'] == row['ID']]
-                if row['COMMAND'] == 'standard':
-                    title = row['TICKER']
-                else:
-                    title = row['TICKER'] + ' ' + row['COMMAND'][0].upper() + row['COMMAND'][1:]
-                value = ''
-                short_str = 'Short '
-                long_str = 'Long '
-                shorts = False
-                longs = False
-                for index, position in positions.iterrows():
-                    if position['short_trade']:
-                        short_str += str(position['strike']) + ' ' + position['side'] + ' '
-                        shorts = True
-                    else:
-                        long_str += str(position['strike']) + ' ' + position['side'] + ' '
-                        longs = True
-                if longs:
-                    value += long_str
-                if shorts:
-                    value += short_str
-                if "id=true" in params.lower():
-                    value += ' ' + row['DATE'] + ' ID: ' + row['ID']
-                else:
-                    value += ' ' + row['DATE']
-                embedVar.add_field(name=title, value=value, inline=False)
+                    embedVar.add_field(name=description, value=quantity, inline=False)
             await ctx.channel.send(embed=embedVar)
     elif params.split(' ')[0] == 'listen':
         if len(params.split(' ')) < 2:
@@ -868,11 +780,37 @@ async def view(ctx, *, params):
     else:
         await ctx.channel.send('Unkown view command')
 
-@client.command(aliases=['in', "bought", "grabbed", 'grabbing', 'buying', 'bto', 'btc','swing', 'swinging','open'])
+@client.command(aliases=['in', "bought", "grabbed", 'grabbing', 'buying', 'bto', 'btc','swing', 'swinging','open','cut', "sold", "cutting", 'selling', 'stc', 'closing', 'sto', 'sell'])
 async def discordopen(ctx, *, order):
     server_main = client.get_guild(UTOPIA)
     order = order.lower().replace('$', '')
     response, message = ch.handle_order(order, ctx.author.name, ctx.channel.name, TD_ACCOUNT)
+    if not (ctx.author.name == 'SammySnipes' or ctx.author.name  == 'MoneyMan' or ctx.author.name  == 'Engine Trades' or ctx.author.name == 'TacoTradez🌮'):
+        await ctx.channel.send(message)
+    else:
+        await ctx.channel.send('\n'.join(message.split('\n')[:-1]))
+    if response == 200:
+        for member in broadcast(ctx, server_main):
+            try:
+                await member.send(ctx.author.name + ' Is now ' + message.split('\n')[1])
+            except:
+                print('Faile on ' + member.name)
+
+@client.command()
+async def alert(ctx, *, alert_message):
+    server_main = client.get_guild(UTOPIA)
+    targets = broadcast(ctx, server_main)
+    for member in targets:
+        try:
+            await member.send('Message from ' + ctx.author.name + ' ' + alert_message)
+        except:
+            print('Faile on ' + member.name)
+    await ctx.channel.send('**Success**\nAlerted ' + str(len(targets)) + ' people.')
+
+@client.command()
+async def sclose(ctx, *, symbol):
+    server_main = client.get_guild(UTOPIA)
+    response, message = ch.close_position_given_symbol(symbol, ctx.author.name, ctx.channel.name, TD_ACCOUNT)
     await ctx.channel.send(message)
     if response == 200:
         for member in broadcast(ctx, server_main):
@@ -881,49 +819,24 @@ async def discordopen(ctx, *, order):
             except:
                 print('Faile on ' + member.name)
 
-@client.command(aliases=['cut', "sold", "cutting", 'selling', 'stc', 'closing', 'sto', 'sell'])
+@client.command()
+async def dclose(ctx, *, description):
+    server_main = client.get_guild(UTOPIA)
+    response, message = ch.close_position_given_symbol(description, ctx.author.name, ctx.channel.name, TD_ACCOUNT)
+    await ctx.channel.send(message)
+    if response == 200:
+        for member in broadcast(ctx, server_main):
+            try:
+                await member.send(ctx.author.name + ' Is now ' + message.split('\n')[1])
+            except:
+                print('Faile on ' + member.name)
+
+@client.command()
 async def close(ctx, *, order):
     server_main = client.get_guild(UTOPIA)
     order = order.lower().replace('$', '')
-    
     response, message = ch.handle_closing_order(order, ctx.author.name, ctx.channel.name, TD_ACCOUNT)
-    print(ctx.author.name)
-    if (ctx.author.name == 'SammySnipes' or ctx.author.name == 'MoneyMan' or ctx.author.name == 'Engine Trades' or ctx.author.name =='Charlie678'):
-        print('Located author name')
-        print(message)
-        message = message.split('for recorded')[0]
-        print(message)
-    if not response == 101:
-        await ctx.channel.send(message)
-    else:
-        trades = message
-        positions_db = pd.read_csv('positions_db.csv', index_col=0)
-        embedVar = discord.Embed(title="You seem to have more than one position that fit " + str(order), description='Please add additional specification, ie a date or a strike', color=0x00e6b8)
-        for index, row in trades.iterrows():
-            positions = positions_db[positions_db['id'] == row['ID']]
-            if row['COMMAND'] == 'standard':
-                title = row['TICKER']
-            else:
-                title = row['TICKER'] + ' ' + row['COMMAND'][0].upper() + row['COMMAND'][1:]
-            value = ''
-            short_str = 'Short '
-            long_str = 'Long '
-            shorts = False
-            longs = False
-            for index, position in positions.iterrows():
-                if position['short_trade']:
-                    short_str += str(position['strike']) + ' ' + position['side'] + ' '
-                    shorts = True
-                else:
-                    long_str += str(position['strike']) + ' ' + position['side'] + ' '
-                    longs = True
-            if longs:
-                value += long_str
-            if shorts:
-                value += short_str
-            value += ' ' + row['DATE']
-            embedVar.add_field(name=title, value=value, inline=False)
-        await ctx.channel.send(embed=embedVar)
+    await ctx.channel.send(message)
     if response == 200:
         for member in broadcast(ctx, server_main):
             try:
