@@ -1,65 +1,120 @@
 import pandas as pd
 from csv_manager import CSVHandler
 import datetime as dt
+from itertools import islice
 
-old = pd.read_csv('trades_db.csv')
-old_pos = pd.read_csv('positions_db.csv')
-positions = []
-for index, pos in old.iterrows():
-    oldies = old_pos[old_pos['id'] == pos['ID']]
-    if pos['COMMAND'] == 'standard':
-        # if len(oldies) < 2:
-        #     pass
-        if len(oldies) > 2:
-            print('error bot')
-            #print(oldies, pos['COMMAND'])
-        elif len(oldies) <= 2:
-            for index, pos in oldies.iterrows():
-                trade_id = pos['id']
-                ticker = pos['ticker']
-                symbol = pos['symbol']
-                if pos['closing']:
-                    quantity = -100
-                else:
-                    quantity = 100
-                asset_type = 'OPTION'
-                date = pos['date']
-                side = pos['side']
-                if pos['closing']:
-                    trade_price = pos['bidPrice']
-                else:
-                    trade_price = pos['askPrice']
-                strike = pos['strike']
-                bid_price = pos['bidPrice']
-                ask_price = pos['askPrice']
-                delta = pos['delta']
-                theta = pos['theta']
-                gamma = pos['gamma']
-                vega = pos['volatility']
-                description = pos['description'].replace('(Weekly)','').strip()
-                author = pos['trader']
-                channel = pos['channel']
-                time = pos['time']
-                if description == 'Expired' or description == 'Symbol not found':
-                    for index, item in enumerate(positions):
-                        if item[0] == trade_id:
-                            positions[index][4] = 0
-                else:
-                    positions.append([trade_id, ticker, asset_type, symbol, quantity, date, side, trade_price, strike, bid_price, ask_price, delta, theta, gamma, vega, description, author, channel, time])
-columns = ['id', 'ticker', 'asset', 'symbol', 'quantity', 'date', 'side','trade_price', 'strike', 'bidPrice', 'askPrice', 'delta', 'theta', 'gamma', 'vega', 'description', 'trader', 'channel', 'time']
-# Create a new position dataframe with each row as a full position.
-position_df = pd.DataFrame(data=positions, columns=columns)
-# for index, pos in position_df.iterrows():
-#     news = position_df[position_df['id'] == pos['id']]
-#     if len(news) ==1:
-#         item = news.iloc[0]
-#         qty = item['quantity']
-#         if qty < 100:
-#             print(qty)
-#     elif len(news) > 2:
-#         print(news)
-position_csv_handler = CSVHandler('temp_positions.csv', 'id')
-position_csv_handler.add_rows(position_df)
+def get_history(individual_trades, name='Dick Branson'):
+    individual_trades = individual_trades[positions_db['trader'] == name]
+    leaderboard = []
+    if len(individual_trades) > 1:
+        descriptions = []
+        for index, row in individual_trades.iterrows():
+            descriptions.append(row['description'])
+        descriptions = list(set(descriptions))
+        profit_descriptions = []
+        for description in descriptions:
+            curr_quantity = 0
+            exact_positions = individual_trades[individual_trades['description'] == description]
+            if len(exact_positions) > 1:
+                prices = []
+                all_prices = []
+                qty = 0
+                for index, row in exact_positions.iterrows():
+                    qty += row['quantity']
+                    # if abs(row['quantity']) == 100:
+                    #     row['quantity'] = row['quantity']/100
+                    if row['quantity'] > 0:
+                        prices.append(row['trade_price']*-1*abs(row['quantity']))
+                    elif row['quantity'] < 0:
+                        prices.append(row['trade_price']*abs(row['quantity']))
+                    if qty == 0:
+                        all_prices.append(prices)
+                        prices = []
+                all_prices = [lst for lst in all_prices if lst != []]
+                profits = []
+                for prices in all_prices:
+                    received = 0
+                    spent = 0
+                    for price in prices:
+                        if price > 0:
+                            received += price
+                        elif price < 0:
+                            spent += price
+                    profit = ((abs(received)-abs(spent))/abs(spent))*100
+                    profit = round(profit, 2)
+                    profits.append(profit)
+                profit_descriptions.append((profits, description))
+    return profit_descriptions
+
+
+positions_db = pd.read_csv('new_positions.csv', index_col=0)
+positions_db['time'] = pd.to_datetime(positions_db['time'])
+current_month = dt.datetime.now().replace(day=1)
+mask = (positions_db['time'] > current_month) & (positions_db['time'] <= dt.datetime.now()) 
+individual_trades = positions_db.loc[mask]
+
+
+print(get_history(individual_trades))
+
+
+# old = pd.read_csv('trades_db.csv')
+# old_pos = pd.read_csv('positions_db.csv')
+# positions = []
+# for index, pos in old.iterrows():
+#     oldies = old_pos[old_pos['id'] == pos['ID']]
+#     if pos['COMMAND'] == 'standard':
+#         # if len(oldies) < 2:
+#         #     pass
+#         if len(oldies) > 2:
+#             print('error bot')
+#             #print(oldies, pos['COMMAND'])
+#         elif len(oldies) <= 2:
+#             for index, pos in oldies.iterrows():
+#                 trade_id = pos['id']
+#                 ticker = pos['ticker']
+#                 symbol = pos['symbol']
+#                 if pos['closing']:
+#                     quantity = -100
+#                 else:
+#                     quantity = 100
+#                 asset_type = 'OPTION'
+#                 date = pos['date']
+#                 side = pos['side']
+#                 if pos['closing']:
+#                     trade_price = pos['bidPrice']
+#                 else:
+#                     trade_price = pos['askPrice']
+#                 strike = pos['strike']
+#                 bid_price = pos['bidPrice']
+#                 ask_price = pos['askPrice']
+#                 delta = pos['delta']
+#                 theta = pos['theta']
+#                 gamma = pos['gamma']
+#                 vega = pos['volatility']
+#                 description = pos['description'].replace('(Weekly)','').strip()
+#                 author = pos['trader']
+#                 channel = pos['channel']
+#                 time = pos['time']
+#                 if description == 'Expired' or description == 'Symbol not found':
+#                     for index, item in enumerate(positions):
+#                         if item[0] == trade_id:
+#                             positions[index][4] = 0
+#                 else:
+#                     positions.append([trade_id, ticker, asset_type, symbol, quantity, date, side, trade_price, strike, bid_price, ask_price, delta, theta, gamma, vega, description, author, channel, time])
+# columns = ['id', 'ticker', 'asset', 'symbol', 'quantity', 'date', 'side','trade_price', 'strike', 'bidPrice', 'askPrice', 'delta', 'theta', 'gamma', 'vega', 'description', 'trader', 'channel', 'time']
+# # Create a new position dataframe with each row as a full position.
+# position_df = pd.DataFrame(data=positions, columns=columns)
+# # for index, pos in position_df.iterrows():
+# #     news = position_df[position_df['id'] == pos['id']]
+# #     if len(news) ==1:
+# #         item = news.iloc[0]
+# #         qty = item['quantity']
+# #         if qty < 100:
+# #             print(qty)
+# #     elif len(news) > 2:
+# #         print(news)
+# position_csv_handler = CSVHandler('temp_positions.csv', 'id')
+# position_csv_handler.add_rows(position_df)
     # #ID,TRADER,COMMAND,TICKER,POSITIONS,NET_PRICE,OPENING,DATE,AVG_PRICE,CLOSED,PROFIT
     # trade_id = pos['id']
     # if pos['COMMAND'] == 'standard':
