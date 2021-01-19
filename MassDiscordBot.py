@@ -22,9 +22,11 @@ import math
 
 #locale.setlocale(locale.LC_ALL, 'en_US')
 
-intents = discord.Intents.default()
-intents.members = True
-client = commands.Bot(command_prefix = '.', case_insensitive=True,  intents=intents)
+#intents = discord.Intents.default()
+#intents.members = True
+
+#client = commands.Bot(command_prefix = '.', case_insensitive=True,  intents=intents)
+client = commands.Bot(command_prefix = '.', case_insensitive=True)
 
 look_up = {'01': 'January', '02': 'Febuary', '03': 'March', '04': 'April', '05': 'May',
             '06': 'June', '07': 'July', '08': 'August', '09': 'September', '10': 'October', '11': 'November', '12': 'December'}
