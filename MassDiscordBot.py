@@ -1021,4 +1021,9 @@ async def commandcreate(ctx):
     return_str = '.open '+ new_df['NAME'] + ' AMD ' + strike_str + ' MM' + new_df['DATE_SEP'] + 'DD ' + avg_price_str
     await ctx.channel.send("Great, looks like you're all done, here is an example of what your command will look like\n"+str(return_str.values[0]))
 
+@client.command()
+async def debug(ctx):
+    member_names = [member.name for member in client.get_guild(UTOPIA).members if 'Admins' not in member.roles]
+    print(member_names)
+
 client.run(CREDS)
