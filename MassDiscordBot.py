@@ -807,11 +807,27 @@ async def deep(ctx, *, description):
     else:
         await ctx.channel.send(message)
 
-@client.command(aliases=['in', "bought", "grabbed", 'grabbing', 'buying', 'bto', 'btc','swing', 'swinging','open','cut', "sold", "cutting", 'selling', 'stc', 'closing', 'sto', 'sell'])
+@client.command(aliases=['in', "bought", "grabbed", 'grabbing', 'buying', 'bto', 'btc','swing', 'swinging','open'])
 async def discordopen(ctx, *, order):
     server_main = client.get_guild(UTOPIA)
     order = order.lower().replace('$', '')
-    response, message = ch.handle_order(order, ctx.author.name, ctx.channel.name, TD_ACCOUNT)
+    response, message = ch.handle_order(order, ctx.author.name, ctx.channel.name, TD_ACCOUNT, 1)
+    if not (ctx.author.name == 'SammySnipes' or ctx.author.name  == 'MoneyMan' or ctx.author.name  == 'Engine Trades' or ctx.author.name == 'TacoTradez🌮'):
+        await ctx.channel.send(message)
+    else:
+        await ctx.channel.send('\n'.join(message.split('\n')[:-1]))
+    if response == 200:
+        for member in broadcast(ctx, server_main):
+            try:
+                await member.send(ctx.author.name + ' Is now ' + message.split('\n')[1])
+            except:
+                print('Faile on ' + member.name)
+
+@client.command(aliases=['cut', "sold", "cutting", 'selling', 'stc', 'closing', 'sto', 'sell'])
+async def discordsell(ctx, *, order):
+    server_main = client.get_guild(UTOPIA)
+    order = order.lower().replace('$', '')
+    response, message = ch.handle_order(order, ctx.author.name, ctx.channel.name, TD_ACCOUNT, -1)
     if not (ctx.author.name == 'SammySnipes' or ctx.author.name  == 'MoneyMan' or ctx.author.name  == 'Engine Trades' or ctx.author.name == 'TacoTradez🌮'):
         await ctx.channel.send(message)
     else:

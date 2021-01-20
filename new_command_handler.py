@@ -99,14 +99,14 @@ def parse_single_strike(strike):
                 strike_num = strike
         return strike_num, side
 
-def parse_ironcondor(order, author, channel, td_account):
+def parse_ironcondor(order, author, channel, td_account,quantity_multiplier):
     pass
-def parse_creditspread(order, author, channel, td_account):
+def parse_creditspread(order, author, channel, td_account,quantity_multiplier):
     pass
-def parse_debitspread(order, author, channel, td_account):
+def parse_debitspread(order, author, channel, td_account,quantity_multiplier):
     pass
 
-def handle_single_order(order, author, channel, td_account):
+def handle_single_order(order, author, channel, td_account, quantity_multiplier):
     # Generate unique trade uuid
     trade_id = uuid.uuid1().hex
     order = order.split(' ')
@@ -177,7 +177,7 @@ def handle_single_order(order, author, channel, td_account):
     for item in found:
         order.remove(item.lower())
     try:
-        quantity = int(quantity)
+        quantity = int(quantity)*quantity_multiplier
     except:
         return 101, 'Quantity is not an integer'
     side = None
@@ -232,8 +232,8 @@ def handle_single_order(order, author, channel, td_account):
     position_df = pd.DataFrame(data=positions, columns=columns)
     return 200, (position_df, 'single', avg_price)
 
-def handle_temp_order(order, author, channel, td_account, desired_function):
-    position_status, data = desired_function(order, author, channel, td_account)
+def handle_temp_order(order, author, channel, td_account, desired_function, quantity_multiplier):
+    position_status, data = desired_function(order, author, channel, td_account, quantity_multiplier)
     if position_status == 200:
         position_df = data[0]
         position_csv_handler = CSVHandler('new_positions.csv', 'id')
@@ -451,7 +451,7 @@ def handle_closing_order(order, author, channel, td_account):
                         return 200, 'Closed position\n ' + description + '. Bought ' + str(qty) + ' shares/contracts.'
     return 300, 'Unable to close position with given information. I thought you said\nTICKER:**'+ticker+'** DATE:**'+date+'** STRIKE:**'+strike+'** SIDE:**' +side+'**'
       
-def handle_order(order, author, channel, td_account):
+def handle_order(order, author, channel, td_account, quantity_multiplier):
     order_splits = order.split(' ')
     commands = pd.read_csv('command_db.csv')['NAME'].values
     name = 'Single'
@@ -465,7 +465,7 @@ def handle_order(order, author, channel, td_account):
     if 'debitspread' in order.lower():
         desired_function = parse_debitspread
         name = 'Debit Spread'
-    status_code, data = handle_temp_order(order, author, channel, td_account, desired_function)
+    status_code, data = handle_temp_order(order, author, channel, td_account, desired_function, quantity_multiplier)
     if status_code == 200:
         if name == 'Single':
             position_df = data
@@ -478,7 +478,12 @@ def handle_order(order, author, channel, td_account):
             fill_price = position['trade_price']
             strike = position['strike']
             side = position['side']
-            return 200, '**Success**\nOpened **' + ticker.upper() + ' ' + str(strike) + ' ' + side + ' ' + date + '**\nFilled at ' + str(fill_price)
+            if quantity_multiplier == 1:
+                return 200, '**Success**\nBought **' + ticker.upper() + ' ' + str(strike) + ' ' + side + ' ' + date + '**\nFilled at ' + str(fill_price)
+            elif quantity_multiplier == -1:
+                return 200, '**Success**\nSold **' + ticker.upper() + ' ' + str(strike) + ' ' + side + ' ' + date + '**\nFilled at ' + str(fill_price)
+            else:
+                return 200, '**Success**\nThis should not be happening **' + ticker.upper() + ' ' + str(strike) + ' ' + side + ' ' + date + '**\nFilled at ' + str(fill_price)
         else:
             pass
     elif status_code == 300:
