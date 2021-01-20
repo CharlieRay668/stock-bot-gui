@@ -22,11 +22,11 @@ import math
 
 #locale.setlocale(locale.LC_ALL, 'en_US')
 
-#intents = discord.Intents.default()
-#intents.members = True
+intents = discord.Intents.default()
+intents.members = True
 
-#client = commands.Bot(command_prefix = '.', case_insensitive=True,  intents=intents)
-client = commands.Bot(command_prefix = '.', case_insensitive=True)
+client = commands.Bot(command_prefix = '.', case_insensitive=True,  intents=intents)
+#client = commands.Bot(command_prefix = '.', case_insensitive=True)
 
 look_up = {'01': 'January', '02': 'Febuary', '03': 'March', '04': 'April', '05': 'May',
             '06': 'June', '07': 'July', '08': 'August', '09': 'September', '10': 'October', '11': 'November', '12': 'December'}
@@ -428,7 +428,7 @@ async def record(ctx, *, params):
         print(type(param))
 
 def get_history(individual_trades, name):
-    if name == 'SammySnipes' or name == 'MoneyMan' or name == 'Engine Trades' or name == 'Adam B':
+    if name == 'SammySnipes' or name == 'MoneyMan' or name == 'Engine Trades' or name == 'Adam B' or name == 'Charlie678':
         return 300, 'No admins'
     individual_trades = individual_trades[individual_trades['trader'] == name]
     leaderboard = []
@@ -447,8 +447,8 @@ def get_history(individual_trades, name):
                 qty = 0
                 for index, row in exact_positions.iterrows():
                     qty += row['quantity']
-                    # if abs(row['quantity']) == 100:
-                    #     row['quantity'] = row['quantity']/100
+                    if abs(row['quantity'])%100 == 0:
+                        row['quantity'] = row['quantity']/100
                     if row['quantity'] > 0:
                         prices.append(row['trade_price']*-1*abs(row['quantity']))
                     elif row['quantity'] < 0:
@@ -485,13 +485,14 @@ def calc_leaderboard():
     mask = (positions_db['time'] > current_month) & (positions_db['time'] <= dt.datetime.now()) 
     individual_trades = positions_db.loc[mask]
     for name in member_names:
-        score = 0
-        status, profit_descriptions = get_history(individual_trades, name)
-        if status == 200:
-            for profits, description in profit_descriptions:
-                for profit in profits:
-                    score += profit
-            leaderboard.append((profit, name))
+        if not (name == 'SammySnipes' or name == 'MoneyMan' or name == 'Engine Trades' or name == 'Adam B' or name == 'Charlie678'):
+            score = 0
+            status, profit_descriptions = get_history(individual_trades, name)
+            if status == 200:
+                for profits, description in profit_descriptions:
+                    for profit in profits:
+                        score += profit
+                leaderboard.append((round(score,2), name))
     leaderboard.sort(reverse=True)
     return leaderboard
 
@@ -618,6 +619,32 @@ async def account(ctx, *, params):
     #         default_amount = 10000
     #         tradingview = None
     #         ACCOUNT_HANDLER.add_row([name, port_value, default_type, default_amount, tradingview])
+
+def get_stats(name):
+    positions_db = pd.read_csv('new_positions.csv', index_col=0)
+    positions_db['time'] = pd.to_datetime(positions_db['time'])
+    current_month = dt.datetime.now().replace(day=1)
+    mask = (positions_db['time'] > current_month) & (positions_db['time'] <= dt.datetime.now()) 
+    individual_trades = positions_db.loc[mask]
+    individual_trades = individual_trades[individual_trades['trader'] == name]
+    if len(individual_trades) < 1:
+        return 500, None
+    else:
+        score = 0
+        wins = 0
+        losses = 0
+        status, profit_descriptions = get_history(individual_trades, name)
+        if status == 200:
+            for profits, description in profit_descriptions:
+                for profit in profits:
+                    score += profit
+                    if profit > 0:
+                        wins += 1
+                    elif profit < 0:
+                        losses += 1
+        return 200, (score, wins, losses)
+
+
 @client.command(aliases=['check'])
 async def view(ctx, *, params):
     if params.split(' ')[0] == 'commands':
@@ -636,52 +663,18 @@ async def view(ctx, *, params):
                     name = params.split(' ')[1]
             else:
                 name = check_member_id(params)
-        positions_db = pd.read_csv('new_positions.csv', index_col=0)
-        individual_trades = positions_db[positions_db['trader'] == name]
-        if len(individual_trades) < 1:
+        status, data = get_stats(name)
+        if status == 500:
             await ctx.channel.send('User ' + name + ' has no stats to show')
-        else:
-            descriptions = []
-            for index, row in individual_trades.iterrows():
-                descriptions.append(row['description'])
-            descriptions = list(set(descriptions))
-            all_positions = []
-            profit = 0
-            wins = 0
-            losses = 0
-            for description in descriptions:
-                curr_quantity = 0
-                exact_positions = individual_trades[individual_trades['description'] == description]
-                if len(exact_positions) > 1:
-                    total_qty = 0
-                    curr_profit = 0
-                    total_neg = 0
-                    total_pos = 0
-                    for index, exact in exact_positions.iterrows():
-                        if exact['quantity'] > 0:
-                            dollar_amt = exact['trade_price']*abs(exact['quantity'])*-1
-                            total_neg += dollar_amt
-                        else:
-                            dollar_amt = exact['trade_price']*abs(exact['quantity'])
-                            total_pos += dollar_amt
-                        curr_profit += dollar_amt
-                        total_qty += exact['quantity']
-                        if index != 0 and total_qty == 0:
-                            if curr_profit > 0:
-                                wins += 1
-                            else:
-                                losses += 1
-                            if total_pos == 0:
-                                profit += 0
-                            else:
-                                profit += round((total_pos+total_neg) /abs(total_neg),5)
+        elif status == 200:
+            profit, wins, losses = data
             leaderboard = calc_leaderboard()
             location = -1
             for index, person in enumerate(leaderboard):
                 if person[1] == name:
                     location = index
             embedVar = discord.Embed(title="Stats for user " + name, description='', color=0x00e6b8)
-            embedVar.add_field(name='% Profit', value=str(profit*100) + '%', inline=False)
+            embedVar.add_field(name='% Profit', value=str(profit) + '%', inline=False)
             embedVar.add_field(name='# Wins', value=str(wins), inline=True)
             embedVar.add_field(name='# Losses', value=str(losses), inline=True)
             embedVar.add_field(name='Leaderboard Ranking', value=str(location+1), inline=False)
@@ -778,12 +771,39 @@ async def view(ctx, *, params):
             embedVar = discord.Embed(title=name + "'s history for month of " + look_up[dt.datetime.today().strftime('%m')], description='', color=0x00e6b8)
             for profits, description in history:
                 profits = [str(profit) for profit in profits]
-                embedVar.add_field(name=description, value='% '.join(profits) + '%', inline=False)
+                if len(profits) > 0:
+                    embedVar.add_field(name=description, value='% '.join(profits) + '%', inline=False)
             await ctx.channel.send(embed=embedVar)
         else:
             await ctx.channel.send("Hmm, Something went wrong")
     else:
         await ctx.channel.send('Unkown view command')
+
+def in_depth(name, description):
+    positions_db = pd.read_csv('new_positions.csv', index_col=0)
+    positions_db['time'] = pd.to_datetime(positions_db['time'])
+    current_month = dt.datetime.now().replace(day=1)
+    mask = (positions_db['time'] > current_month) & (positions_db['time'] <= dt.datetime.now()) 
+    individual_trades = positions_db.loc[mask]
+    individual_trades = individual_trades[individual_trades['trader'] == name]
+    if len(individual_trades) < 1:
+        return 404, "Hmm, You dont seem to have any trades for this month."
+    individual_trades = individual_trades[individual_trades['description'] == description]
+    if len(individual_trades) < 1:
+        return 403, "Hmm, You dont seem to have any trades matching " + description + " for this month."
+    return 200, individual_trades
+
+@client.command()
+async def deep(ctx, *, description):
+    name = ctx.author.name
+    status, message = in_depth(name, description)
+    if status == 200:
+        embedVar = discord.Embed(title=name +"'s deep dive for security " + description, description='', color=0x00e6b8)
+        for index, row in message.iterrows():
+            embedVar.add_field(name=index, value='Fill Price: ' + str(row['trade_price']) + ', Quantity: ' + str(row['quantity']) + ', Time: ' + str(row['time']), inline=False)
+        await ctx.channel.send(embed=embedVar)
+    else:
+        await ctx.channel.send(message)
 
 @client.command(aliases=['in', "bought", "grabbed", 'grabbing', 'buying', 'bto', 'btc','swing', 'swinging','open','cut', "sold", "cutting", 'selling', 'stc', 'closing', 'sto', 'sell'])
 async def discordopen(ctx, *, order):
