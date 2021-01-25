@@ -449,7 +449,7 @@ def handle_closing_order(order, author, channel, td_account):
                         return 200, 'Closed position\n ' + description + '. Sold ' + str(qty) + ' shares/contracts.'
                     elif qty < 0:
                         return 200, 'Closed position\n ' + description + '. Bought ' + str(qty) + ' shares/contracts.'
-    return 300, 'Unable to close position with given information. I thought you said\nTICKER:**'+ticker+'** DATE:**'+date+'** STRIKE:**'+strike+'** SIDE:**' +side+'**'
+    return 300, 'Unable to close position with given information. I thought you said\nTICKER: **'+str(ticker)+'** DATE: **'+str(date)+'** STRIKE: **'+str(strike)+'** SIDE: **' +str(side)+'**'
       
 def handle_order(order, author, channel, td_account, quantity_multiplier):
     order_splits = order.split(' ')

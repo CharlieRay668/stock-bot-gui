@@ -797,7 +797,15 @@ def in_depth(name, description):
 
 @client.command()
 async def deep(ctx, *, description):
-    name = ctx.author.name
+    splits = description.split(' ')
+    name = None
+    for split in splits:
+        if "name=" in description:
+            name = split.split("name=")[0]
+            splits.remove(split)
+    if name == None:
+        name = ctx.author.name
+    description = ' '.join(splits)
     status, message = in_depth(name, description)
     if status == 200:
         embedVar = discord.Embed(title=name +"'s deep dive for security " + description, description='', color=0x00e6b8)
