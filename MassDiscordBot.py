@@ -449,8 +449,8 @@ def get_history(individual_trades, name):
                 qty = 0
                 for index, row in exact_positions.iterrows():
                     qty += row['quantity']
-                    if abs(row['quantity'])%100 == 0:
-                        row['quantity'] = row['quantity']/100
+                    # if abs(row['quantity'])%100 == 0:
+                    #     row['quantity'] = row['quantity']/100
                     if row['quantity'] > 0:
                         prices.append(row['trade_price']*-1*abs(row['quantity']))
                     elif row['quantity'] < 0:
@@ -491,9 +491,19 @@ def calc_leaderboard():
             score = 0
             status, profit_descriptions = get_history(individual_trades, name)
             if status == 200:
+                wins = 0
+                losses = 0
                 for profits, description in profit_descriptions:
                     for profit in profits:
+                        if profit > 0:
+                            wins += 1
+                        elif profit < 0:
+                            losses += 1
                         score += profit
+                score += 70*wins
+                score += -70*losses
+                # if losses > 0:
+                #     score = score * (wins/(losses+wins))
                 leaderboard.append((round(score,2), name))
     leaderboard.sort(reverse=True)
     return leaderboard
@@ -771,11 +781,24 @@ async def view(ctx, *, params):
         response_code, history = get_history(individual_trades, name)
         if response_code == 200:
             embedVar = discord.Embed(title=name + "'s history for month of " + look_up[dt.datetime.today().strftime('%m')], description='', color=0x00e6b8)
+            return_str = ''
             for profits, description in history:
                 profits = [str(profit) for profit in profits]
                 if len(profits) > 0:
-                    embedVar.add_field(name=description, value='% '.join(profits) + '%', inline=False)
-            await ctx.channel.send(embed=embedVar)
+                    return_str += '\n**'+'% '.join(profits) + '%' + '**// ' + description
+                    #embedVar.add_field(name=description, value='% '.join(profits) + '%', inline=False)
+            #embedVar.add_field(name='Trades', value=return_str, inline=False)
+            #await ctx.channel.send(embed=embedVar)
+            return_str = return_str.split('//')
+            print_str = ''
+            for item in return_str:
+                test_str = print_str + item
+                if len(test_str) > 1800:
+                    await ctx.channel.send(test_str)
+                    test_str = ''
+                    print_str = ''
+                print_str += item
+            await ctx.channel.send(print_str)
         else:
             await ctx.channel.send("Hmm, Something went wrong")
     else:
@@ -985,7 +1008,6 @@ async def commandcreate(ctx):
                     'Press the ✅ to submit the chain']
         await ctx.channel.send('\nHere is a option chain, please adjust option positions to match your strategy.\n' + '\n'.join(strings))
         order_struct = await handle_reactions(ctx)
-        print(order_struct)
         TRADE_COLUMNS['ORDER_STRUCT'] = [order_struct]
         strike_num = len(order_struct)
         TRADE_COLUMNS['STRIKE_NUM'] = strike_num
