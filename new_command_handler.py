@@ -168,8 +168,8 @@ def handle_single_order(order, author, channel, td_account, quantity_multiplier)
             quantity = item.replace('qty', '')
             quantity = quantity.replace('=','').replace(':','')
     if quantity is None:
-        quantity = 100
-        quantity_str = '100'
+        quantity = 1
+        quantity_str = '1'
         order.append(quantity_str)
         #return 403, 'Quantity not Found'
     found = []
