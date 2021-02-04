@@ -483,8 +483,8 @@ def calc_leaderboard():
     leaderboard = []
     positions_db = pd.read_csv('new_positions.csv', index_col=0)
     positions_db['time'] = pd.to_datetime(positions_db['time'])
-    current_month = dt.datetime.now().replace(day=1)
-    mask = (positions_db['time'] > current_month) & (positions_db['time'] <= dt.datetime.now()) 
+    current_month = dt.datetime.now().replace(day=1).replace(hour=0).replace(minute=0)
+    mask = (positions_db['time'] >= current_month) & (positions_db['time'] <= dt.datetime.now()) 
     individual_trades = positions_db.loc[mask]
     for name in member_names:
         if not (name == 'SammySnipes' or name == 'MoneyMan' or name == 'Engine Trades' or name == 'Adam B' or name == 'Charlie678'):
@@ -633,10 +633,12 @@ async def account(ctx, *, params):
     #         ACCOUNT_HANDLER.add_row([name, port_value, default_type, default_amount, tradingview])
 
 def get_stats(name):
+    if name[:1] == 'ED':
+        print(name)
     positions_db = pd.read_csv('new_positions.csv', index_col=0)
     positions_db['time'] = pd.to_datetime(positions_db['time'])
-    current_month = dt.datetime.now().replace(day=1)
-    mask = (positions_db['time'] > current_month) & (positions_db['time'] <= dt.datetime.now()) 
+    current_month = dt.datetime.now().replace(day=1).replace(hour=0).replace(minute=0)
+    mask = (positions_db['time'] >= current_month) & (positions_db['time'] <= dt.datetime.now()) 
     individual_trades = positions_db.loc[mask]
     individual_trades = individual_trades[individual_trades['trader'] == name]
     if len(individual_trades) < 1:
@@ -775,8 +777,8 @@ async def view(ctx, *, params):
                 name = check_member_id(params)
         positions_db = pd.read_csv('new_positions.csv', index_col=0)
         positions_db['time'] = pd.to_datetime(positions_db['time'])
-        current_month = dt.datetime.now().replace(day=1)
-        mask = (positions_db['time'] > current_month) & (positions_db['time'] <= dt.datetime.now()) 
+        current_month = dt.datetime.now().replace(day=1).replace(hour=0).replace(minute=0)
+        mask = (positions_db['time'] >= current_month) & (positions_db['time'] <= dt.datetime.now()) 
         individual_trades = positions_db.loc[mask]
         response_code, history = get_history(individual_trades, name)
         if response_code == 200:
@@ -807,8 +809,8 @@ async def view(ctx, *, params):
 def in_depth(name, description):
     positions_db = pd.read_csv('new_positions.csv', index_col=0)
     positions_db['time'] = pd.to_datetime(positions_db['time'])
-    current_month = dt.datetime.now().replace(day=1)
-    mask = (positions_db['time'] > current_month) & (positions_db['time'] <= dt.datetime.now()) 
+    current_month = dt.datetime.now().replace(day=1).replace(hour=0).replace(minute=0)
+    mask = (positions_db['time'] >= current_month) & (positions_db['time'] <= dt.datetime.now()) 
     individual_trades = positions_db.loc[mask]
     individual_trades = individual_trades[individual_trades['trader'] == name]
     if len(individual_trades) < 1:
