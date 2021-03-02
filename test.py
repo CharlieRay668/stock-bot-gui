@@ -1,120 +1,176 @@
-import pandas as pd
-from csv_manager import CSVHandler
-import datetime as dt
-from itertools import islice
+import discord
+from discord.ext import commands
+import requests
+import json
+import time
 
-def get_history(individual_trades, name):
-    if name == 'SammySnipes' or name == 'MoneyMan' or name == 'Engine Trades' or name == 'Adam B':
-        return 300, 'No admins'
-    individual_trades = individual_trades[individual_trades['trader'] == name]
-    leaderboard = []
-    if len(individual_trades) > 1:
-        descriptions = []
-        for index, row in individual_trades.iterrows():
-            descriptions.append(row['description'])
-        descriptions = list(set(descriptions))
-        profit_descriptions = []
-        for description in descriptions:
-            curr_quantity = 0
-            exact_positions = individual_trades[individual_trades['description'] == description]
-            if len(exact_positions) > 1:
-                prices = []
-                all_prices = []
-                qty = 0
-                for index, row in exact_positions.iterrows():
-                    qty += row['quantity']
-                    # if abs(row['quantity']) == 100:
-                    #     row['quantity'] = row['quantity']/100
-                    if row['quantity'] > 0:
-                        prices.append(row['trade_price']*-1*abs(row['quantity']))
-                    elif row['quantity'] < 0:
-                        prices.append(row['trade_price']*abs(row['quantity']))
-                    if qty == 0:
-                        all_prices.append(prices)
-                        prices = []
-                all_prices = [lst for lst in all_prices if lst != []]
-                profits = []
-                for prices in all_prices:
-                    received = 0
-                    spent = 0
-                    for price in prices:
-                        if price > 0:
-                            received += price
-                        elif price < 0:
-                            spent += price
-                    profit = ((abs(received)-abs(spent))/abs(spent))*100
-                    profit = round(profit, 2)
-                    profits.append(profit)
-                profit_descriptions.append((profits, description))
-        if len(profit_descriptions) > 0:
-            return 200, profit_descriptions
-        else:
-            return 500, 'Description length < 1'
-    return 500, 'Length < 1'
+try:
+    intents = discord.Intents.default()
+    intents.members = True
+
+    client = commands.Bot(command_prefix = '.', case_insensitive=True,  intents=intents)
+except:
+    client = commands.Bot(command_prefix = '.', case_insensitive=True)
 
 
-def in_depth(name, description):
-    positions_db = pd.read_csv('new_positions.csv', index_col=0)
-    positions_db['time'] = pd.to_datetime(positions_db['time'])
-    current_month = dt.datetime.now().replace(day=1)
-    mask = (positions_db['time'] > current_month) & (positions_db['time'] <= dt.datetime.now()) 
-    individual_trades = positions_db.loc[mask]
-    individual_trades = individual_trades[individual_trades['trader'] == name]
-    if len(individual_trades) < 1:
-        return 404, "Hmm, You dont seem to have any trades for this month."
-    individual_trades = individual_trades[individual_trades['description'] == description]
-    if len(individual_trades) < 1:
-        return 403, "Hmm, You dont seem to have any trades matching " + description + " for this month."
-    return 200, individual_trades
+UTOPIA = 679921845671035034
+REQUEST = 679929147107180550
 
-def get_stats(name):
-    positions_db = pd.read_csv('new_positions.csv', index_col=0)
-    positions_db['time'] = pd.to_datetime(positions_db['time'])
-    current_month = dt.datetime.now().replace(day=1)
-    mask = (positions_db['time'] > current_month) & (positions_db['time'] <= dt.datetime.now()) 
-    individual_trades = positions_db.loc[mask]
-    individual_trades = individual_trades[individual_trades['trader'] == name]
-    if len(individual_trades) < 1:
-        return 500
-    else:
-        score = 0
-        wins = 0
-        losses = 0
-        status, profit_descriptions = get_history(individual_trades, name)
-        if status == 200:
-            for profits, description in profit_descriptions:
-                for profit in profits:
-                    score += profit
-                    if profit > 0:
-                        wins += 1
-                    elif profit < 0:
-                        losses += 1
-        return score, wins, losses
+TEST_SERVER = 712778012302770944
+PAPER = 736232441857048597
+DEV_BOT_TOKEN = 'NzUzMzg1MjE1MTAzMzM2NTg4.X1laqA.vKvoV8Gz9jBWDWvIaBGDC4xbLB4'
+BOT_TOKEN = 'NzU0MDAyMzEwNTM5MTE2NTQ0.X1uZXw.urRh3pgMuS8IAfD4jAMbJVdO8D4'
+CREDS = DEV_BOT_TOKEN
 
-def calc_leaderboard(name):
-    member_names = [name]
-    leaderboard = []
-    positions_db = pd.read_csv('new_positions.csv', index_col=0)
-    positions_db['time'] = pd.to_datetime(positions_db['time'])
-    current_month = dt.datetime.now().replace(day=1)
-    mask = (positions_db['time'] > current_month) & (positions_db['time'] <= dt.datetime.now()) 
-    individual_trades = positions_db.loc[mask]
-    for name in member_names:
-        score = 0
-        status, profit_descriptions = get_history(individual_trades, name)
-        if status == 200:
-            for profits, description in profit_descriptions:
-                for profit in profits:
-                    score += profit
-            leaderboard.append((score, name))
-    leaderboard.sort(reverse=True)
-    return leaderboard
+@client.event
+async def on_ready():
+    print("Website Bot is Ready")
+
+async def check_activity():
+    await client.wait_until_ready()
+    server = client.get_guild(UTOPIA)
+    channel = server.get_channel(REQUEST)
+    print(channel)
+    while client.is_closed:
+        activity = requests.get(url='http://67.205.178.72/activity').json()['activity']
+        print(activity)
+        if len(activity) > 0:
+            for action in activity:
+                embedVar = discord.Embed(title="New Activity" , description='', color=0x00e6b8)
+                embedVar.add_field(name='Ticker', value=action[0])
+                embedVar.add_field(name='Quantity', value=action[1])
+                embedVar.add_field(name='Fill Price', value=action[1])
+                if action[3] == 1:
+                    order_action = 'Buy'
+                elif action[3] == 2:
+                    order_action = 'Sell'
+                else:
+                    order_action = 'Unkown'
+                embedVar.add_field(name='Action', value=order_action)
+                await channel.send(embed = embedVar)
+        time.sleep(5)
 
 
-print(get_stats("Dick Branson"))
-print(calc_leaderboard("Dick Branson"))
+client.loop.create_task(check_activity())
+client.run(CREDS)
 
-print(in_depth("Dick Branson", "SPCE Jan 8 2021 25 Call"))
+# import pandas as pd
+# from csv_manager import CSVHandler
+# import datetime as dt
+# from itertools import islice
+
+# def get_history(individual_trades, name):
+#     if name == 'SammySnipes' or name == 'MoneyMan' or name == 'Engine Trades' or name == 'Adam B':
+#         return 300, 'No admins'
+#     individual_trades = individual_trades[individual_trades['trader'] == name]
+#     leaderboard = []
+#     if len(individual_trades) > 1:
+#         descriptions = []
+#         for index, row in individual_trades.iterrows():
+#             descriptions.append(row['description'])
+#         descriptions = list(set(descriptions))
+#         profit_descriptions = []
+#         for description in descriptions:
+#             curr_quantity = 0
+#             exact_positions = individual_trades[individual_trades['description'] == description]
+#             if len(exact_positions) > 1:
+#                 prices = []
+#                 all_prices = []
+#                 qty = 0
+#                 for index, row in exact_positions.iterrows():
+#                     qty += row['quantity']
+#                     # if abs(row['quantity']) == 100:
+#                     #     row['quantity'] = row['quantity']/100
+#                     if row['quantity'] > 0:
+#                         prices.append(row['trade_price']*-1*abs(row['quantity']))
+#                     elif row['quantity'] < 0:
+#                         prices.append(row['trade_price']*abs(row['quantity']))
+#                     if qty == 0:
+#                         all_prices.append(prices)
+#                         prices = []
+#                 all_prices = [lst for lst in all_prices if lst != []]
+#                 profits = []
+#                 for prices in all_prices:
+#                     received = 0
+#                     spent = 0
+#                     for price in prices:
+#                         if price > 0:
+#                             received += price
+#                         elif price < 0:
+#                             spent += price
+#                     profit = ((abs(received)-abs(spent))/abs(spent))*100
+#                     profit = round(profit, 2)
+#                     profits.append(profit)
+#                 profit_descriptions.append((profits, description))
+#         if len(profit_descriptions) > 0:
+#             return 200, profit_descriptions
+#         else:
+#             return 500, 'Description length < 1'
+#     return 500, 'Length < 1'
+
+
+# def in_depth(name, description):
+#     positions_db = pd.read_csv('new_positions.csv', index_col=0)
+#     positions_db['time'] = pd.to_datetime(positions_db['time'])
+#     current_month = dt.datetime.now().replace(day=1)
+#     mask = (positions_db['time'] > current_month) & (positions_db['time'] <= dt.datetime.now()) 
+#     individual_trades = positions_db.loc[mask]
+#     individual_trades = individual_trades[individual_trades['trader'] == name]
+#     if len(individual_trades) < 1:
+#         return 404, "Hmm, You dont seem to have any trades for this month."
+#     individual_trades = individual_trades[individual_trades['description'] == description]
+#     if len(individual_trades) < 1:
+#         return 403, "Hmm, You dont seem to have any trades matching " + description + " for this month."
+#     return 200, individual_trades
+
+# def get_stats(name):
+#     positions_db = pd.read_csv('new_positions.csv', index_col=0)
+#     positions_db['time'] = pd.to_datetime(positions_db['time'])
+#     current_month = dt.datetime.now().replace(day=1)
+#     mask = (positions_db['time'] > current_month) & (positions_db['time'] <= dt.datetime.now()) 
+#     individual_trades = positions_db.loc[mask]
+#     individual_trades = individual_trades[individual_trades['trader'] == name]
+#     if len(individual_trades) < 1:
+#         return 500
+#     else:
+#         score = 0
+#         wins = 0
+#         losses = 0
+#         status, profit_descriptions = get_history(individual_trades, name)
+#         if status == 200:
+#             for profits, description in profit_descriptions:
+#                 for profit in profits:
+#                     score += profit
+#                     if profit > 0:
+#                         wins += 1
+#                     elif profit < 0:
+#                         losses += 1
+#         return score, wins, losses
+
+# def calc_leaderboard(name):
+#     member_names = [name]
+#     leaderboard = []
+#     positions_db = pd.read_csv('new_positions.csv', index_col=0)
+#     positions_db['time'] = pd.to_datetime(positions_db['time'])
+#     current_month = dt.datetime.now().replace(day=1)
+#     mask = (positions_db['time'] > current_month) & (positions_db['time'] <= dt.datetime.now()) 
+#     individual_trades = positions_db.loc[mask]
+#     for name in member_names:
+#         score = 0
+#         status, profit_descriptions = get_history(individual_trades, name)
+#         if status == 200:
+#             for profits, description in profit_descriptions:
+#                 for profit in profits:
+#                     score += profit
+#             leaderboard.append((score, name))
+#     leaderboard.sort(reverse=True)
+#     return leaderboard
+
+
+# print(get_stats("Dick Branson"))
+# print(calc_leaderboard("Dick Branson"))
+
+# print(in_depth("Dick Branson", "SPCE Jan 8 2021 25 Call"))
 
 # def get_history(individual_trades, name='Dick Branson'):
 #     individual_trades = individual_trades[positions_db['trader'] == name]

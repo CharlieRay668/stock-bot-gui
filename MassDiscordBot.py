@@ -95,6 +95,7 @@ def check_admin_perms(ctx):
     return ctx.channel == channel_test or ctx.channel == channel_money or ctx.channel == channel_engine or ctx.channel == channel_sammy or ctx.channel == channel_admin_test or ctx.channel == channel_adam or ctx.channel == channel_risky or ctx.channel == channel_swing
     #return check_unstable(ctx)
 
+# No
 def broadcast(ctx, server_main):
     target_members = None
     for fn in os.listdir('listeners'):
@@ -500,8 +501,8 @@ def calc_leaderboard():
                         elif profit < 0:
                             losses += 1
                         score += profit
-                score += 70*wins
-                score += -70*losses
+                score += 15*wins
+                score += -15*losses
                 # if losses > 0:
                 #     score = score * (wins/(losses+wins))
                 leaderboard.append((round(score,2), name))
